@@ -1,0 +1,30 @@
+.page { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+
+.header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.title { font-size: 22px; font-weight: 700; }
+.sub   { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+.filters {
+  display: flex; gap: 12px; padding: 16px 20px;
+  flex-wrap: wrap; align-items: center;
+}
+.filters select { width: auto; min-width: 160px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th {
+  padding: 10px 12px; text-align: left;
+  background: var(--bg); color: var(--text2);
+  font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .4px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  color: var(--text); vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #fafbfd; }
+.num { color: var(--text3); font-weight: 700; font-size: 12px; }
