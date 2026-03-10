@@ -11,6 +11,26 @@ const NAV = [
   { to: '/admin', icon: '⚙', label: 'Usuarios' },
 ]
 
+function Logo({ size = 28 }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
+      width={size} height={size} style={{ flexShrink: 0 }}>
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4fc3f7" />
+          <stop offset="100%" stopColor="#81d4fa" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="14" fill="rgba(255,255,255,0.15)" />
+      <rect x="10" y="12" width="44" height="28" rx="4" fill="none" stroke="white" strokeWidth="2.5" />
+      <line x1="32" y1="40" x2="32" y2="48" stroke="white" strokeWidth="2.5" />
+      <line x1="22" y1="48" x2="42" y2="48" stroke="white" strokeWidth="2.5" />
+      <polyline points="20,26 28,34 44,18" fill="none" stroke="url(#lg)"
+        strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function Layout({ session }) {
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
@@ -36,8 +56,12 @@ export default function Layout({ session }) {
       <aside className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''}`}>
         <div className={styles.sideTop}>
           <div className={styles.brand}>
-            <span className={styles.brandIcon}>📦</span>
-            {!collapsed && <span className={styles.brandText}>Entregas<br /><small>Recursos Tec.</small></span>}
+            <Logo />
+            {!collapsed && (
+              <span className={styles.brandText}>
+                Entregas<br /><small>Recursos Tec.</small>
+              </span>
+            )}
           </div>
           <button className={`btn btn-icon ${styles.collapseBtn}`} onClick={() => setCollapsed(c => !c)}>
             {collapsed ? '›' : '‹'}
@@ -58,7 +82,7 @@ export default function Layout({ session }) {
           ))}
         </nav>
 
-        {/* ── Pie del sidebar: usuario + cerrar sesión directo ── */}
+        {/* Pie sidebar */}
         <div className={styles.sideBottom}>
           <div className={styles.avatar}>{initials}</div>
           {!collapsed && (
@@ -76,11 +100,13 @@ export default function Layout({ session }) {
       <main className={styles.main}>
         {/* Topbar móvil */}
         <div className={styles.topbar}>
-          <button className={styles.menuBtn} onClick={() => { setCollapsed(false); setMobileOpen(o => !o) }}>
+          <button className={styles.menuBtn}
+            onClick={() => { setCollapsed(false); setMobileOpen(o => !o) }}>
             ☰
           </button>
-          <span className={styles.topbarTitle}>📦 Entregas</span>
-          {/* Cerrar sesión directo en topbar móvil */}
+          <span className={styles.topbarTitle}>
+            <Logo size={24} /> Entregas
+          </span>
           <button className={styles.topbarLogout} onClick={logout}>
             ⇠ Salir
           </button>
