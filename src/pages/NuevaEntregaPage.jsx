@@ -4,26 +4,39 @@ import { supabase } from '../lib/supabase'
 import styles from './FormPage.module.css'
 
 const RECURSOS = [
-  'Video Beam','Computador Portátil','Tableta Gráfica','Micrófono',
-  'Parlante / Altavoz','Cámara Web','Cable HDMI','Control Remoto',
-  'Extensión Eléctrica','Otro',
+  'Video Beam', 'Computador Portátil', 'Tableta Gráfica', 'Micrófono',
+  'Parlante / Altavoz', 'Cámara Web', 'Cable HDMI', 'Control Remoto',
+  'Extensión Eléctrica', 'Otro',
 ]
-const HORARIOS = ['Mañana','Tarde']
-const DIAS     = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
+const HORARIOS = ['Mañana', 'Tarde', 'Noche']
 
 const EMPTY = {
-  fecha:'', recurso:'', docente:'', aula:'',
-  horario:'Mañana', dia:'Lunes', quien_entrega:'', firma_quien_recibe:'', observaciones:'',
+  fecha: '', recurso: '', recurso_otro: '', docente: '', aula: '',
+  horario: 'Mañana', dia: '', quien_entrega: '', observaciones: '',
 }
 
 export default function NuevaEntregaPage({ session }) {
   const navigate = useNavigate()
-  const [form, setForm]       = useState({ ...EMPTY })
-  const [error, setError]     = useState('')
+  const [form, setForm] = useState({ ...EMPTY })
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+  const DIAS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+  function set(k, v) {
+    if (k === 'fecha' && v) {
+      // Calcular el día automáticamente — sumar offset para evitar desfase de zona horaria
+      const [y, m, d] = v.split('-').map(Number)
+      const fecha = new Date(y, m - 1, d)
+      const dia = DIAS_ES[fecha.getDay()]
+      setForm(f => ({ ...f, fecha: v, dia }))
+    } else {
+      setForm(f => ({ ...f, [k]: v }))
+    }
+  }
+
+  const recursoFinal = form.recurso === 'Otro' ? form.recurso_otro : form.recurso
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -31,9 +44,20 @@ export default function NuevaEntregaPage({ session }) {
     if (!form.fecha || !form.recurso || !form.docente || !form.aula) {
       return setError('Los campos Fecha, Recurso, Docente y Aula son obligatorios.')
     }
+    if (form.recurso === 'Otro' && !form.recurso_otro.trim()) {
+      return setError('Por favor especifique el recurso tecnológico.')
+    }
     setLoading(true)
     const { error: err } = await supabase.from('entregas').insert([{
-      ...form,
+      fecha: form.fecha,
+      recurso: recursoFinal,
+      docente: form.docente,
+      aula: form.aula,
+      horario: form.horario,
+      dia: form.dia,
+      quien_entrega: form.quien_entrega,
+      firma_quien_recibe: '',   // siempre vacío — se firma en el reporte impreso
+      observaciones: form.observaciones,
       user_id: session.user.id,
     }])
     setLoading(false)
@@ -59,16 +83,30 @@ export default function NuevaEntregaPage({ session }) {
 
       <form className={`card ${styles.form}`} onSubmit={handleSubmit}>
         <div className={styles.grid2}>
-          <Field label="Fecha *" required>
+          <Field label="Fecha *">
             <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} required />
           </Field>
-          <Field label="Recurso tecnológico *" required>
+          <Field label="Recurso tecnológico *">
             <select value={form.recurso} onChange={e => set('recurso', e.target.value)} required>
               <option value="">Seleccione…</option>
               {RECURSOS.map(r => <option key={r}>{r}</option>)}
             </select>
           </Field>
         </div>
+
+        {/* Campo adicional si selecciona Otro */}
+        {form.recurso === 'Otro' && (
+          <Field label="Especifique el recurso *">
+            <input
+              type="text"
+              value={form.recurso_otro}
+              onChange={e => set('recurso_otro', e.target.value)}
+              placeholder="Escriba el nombre del recurso…"
+              autoFocus
+              required
+            />
+          </Field>
+        )}
 
         <Field label="Docente / Solicitante *">
           <input type="text" value={form.docente}
@@ -88,24 +126,20 @@ export default function NuevaEntregaPage({ session }) {
             </select>
           </Field>
           <Field label="Día">
-            <select value={form.dia} onChange={e => set('dia', e.target.value)}>
-              {DIAS.map(d => <option key={d}>{d}</option>)}
-            </select>
+            <input
+              type="text"
+              value={form.dia || '—'}
+              readOnly
+              style={{ background: '#f4f6f9', color: 'var(--text2)', cursor: 'not-allowed' }}
+            />
           </Field>
         </div>
 
-        <div className={styles.grid2}>
-          <Field label="Nombre de quien entrega">
-            <input type="text" value={form.quien_entrega}
-              onChange={e => set('quien_entrega', e.target.value)}
-              placeholder="Nombre del responsable" />
-          </Field>
-          <Field label="Firma / nombre de quien recibe">
-            <input type="text" value={form.firma_quien_recibe}
-              onChange={e => set('firma_quien_recibe', e.target.value)}
-              placeholder="Nombre o iniciales" />
-          </Field>
-        </div>
+        <Field label="Nombre de quien entrega">
+          <input type="text" value={form.quien_entrega}
+            onChange={e => set('quien_entrega', e.target.value)}
+            placeholder="Nombre del responsable" />
+        </Field>
 
         <Field label="Observaciones">
           <textarea rows={3} value={form.observaciones}
