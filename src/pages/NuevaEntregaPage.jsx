@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import Autocomplete from '../components/Autocomplete'
 import styles from './FormPage.module.css'
 
 const RECURSOS = [
@@ -9,6 +10,7 @@ const RECURSOS = [
   'Extensión Eléctrica', 'Otro',
 ]
 const HORARIOS = ['Mañana', 'Tarde', 'Noche']
+const DIAS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
 const EMPTY = {
   fecha: '', recurso: '', recurso_otro: '', docente: '', aula: '',
@@ -21,33 +23,41 @@ export default function NuevaEntregaPage({ session }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [docentes, setDocentes] = useState([])
+  const [entregadores, setEntregadores] = useState([])
 
-  const DIAS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+  useEffect(() => {
+    async function cargarListas() {
+      const [{ data: d }, { data: e }] = await Promise.all([
+        supabase.from('docentes').select('nombre').order('nombre'),
+        supabase.from('entregadores').select('nombre').order('nombre'),
+      ])
+      setDocentes(d ? d.map(x => x.nombre) : [])
+      setEntregadores(e ? e.map(x => x.nombre) : [])
+    }
+    cargarListas()
+  }, [])
 
   function set(k, v) {
     if (k === 'fecha' && v) {
-      // Calcular el día automáticamente — sumar offset para evitar desfase de zona horaria
       const [y, m, d] = v.split('-').map(Number)
-      const fecha = new Date(y, m - 1, d)
-      const dia = DIAS_ES[fecha.getDay()]
+      const dia = DIAS_ES[new Date(y, m - 1, d).getDay()]
       setForm(f => ({ ...f, fecha: v, dia }))
     } else {
       setForm(f => ({ ...f, [k]: v }))
     }
   }
 
-  const recursoFinal = form.recurso === 'Otro' ? form.recurso_otro : form.recurso
-
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (!form.fecha || !form.recurso || !form.docente || !form.aula) {
+    if (!form.fecha || !form.recurso || !form.docente || !form.aula)
       return setError('Los campos Fecha, Recurso, Docente y Aula son obligatorios.')
-    }
-    if (form.recurso === 'Otro' && !form.recurso_otro.trim()) {
+    if (form.recurso === 'Otro' && !form.recurso_otro.trim())
       return setError('Por favor especifique el recurso tecnológico.')
-    }
+
     setLoading(true)
+    const recursoFinal = form.recurso === 'Otro' ? form.recurso_otro.trim() : form.recurso
     const { error: err } = await supabase.from('entregas').insert([{
       fecha: form.fecha,
       recurso: recursoFinal,
@@ -56,7 +66,7 @@ export default function NuevaEntregaPage({ session }) {
       horario: form.horario,
       dia: form.dia,
       quien_entrega: form.quien_entrega,
-      firma_quien_recibe: '',   // siempre vacío — se firma en el reporte impreso
+      firma_quien_recibe: '',
       observaciones: form.observaciones,
       user_id: session.user.id,
     }])
@@ -76,42 +86,40 @@ export default function NuevaEntregaPage({ session }) {
       </div>
 
       {success && (
-        <div className={styles.successBanner}>
-          ✅ Registro guardado correctamente
-        </div>
+        <div className={styles.successBanner}>✅ Registro guardado correctamente</div>
       )}
 
       <form className={`card ${styles.form}`} onSubmit={handleSubmit}>
+
         <div className={styles.grid2}>
           <Field label="Fecha *">
-            <input type="date" value={form.fecha} onChange={e => set('fecha', e.target.value)} required />
+            <input type="date" value={form.fecha}
+              onChange={e => set('fecha', e.target.value)} required />
           </Field>
           <Field label="Recurso tecnológico *">
-            <select value={form.recurso} onChange={e => set('recurso', e.target.value)} required>
+            <select value={form.recurso}
+              onChange={e => set('recurso', e.target.value)} required>
               <option value="">Seleccione…</option>
               {RECURSOS.map(r => <option key={r}>{r}</option>)}
             </select>
           </Field>
         </div>
 
-        {/* Campo adicional si selecciona Otro */}
         {form.recurso === 'Otro' && (
           <Field label="Especifique el recurso *">
-            <input
-              type="text"
-              value={form.recurso_otro}
+            <input type="text" value={form.recurso_otro}
               onChange={e => set('recurso_otro', e.target.value)}
-              placeholder="Escriba el nombre del recurso…"
-              autoFocus
-              required
-            />
+              placeholder="Escriba el nombre del recurso…" autoFocus required />
           </Field>
         )}
 
         <Field label="Docente / Solicitante *">
-          <input type="text" value={form.docente}
-            onChange={e => set('docente', e.target.value)}
-            placeholder="Nombre completo" required />
+          <Autocomplete
+            value={form.docente}
+            onChange={v => set('docente', v)}
+            options={docentes}
+            placeholder={docentes.length > 0 ? 'Seleccione o escriba un docente…' : 'Escriba el nombre del docente…'}
+          />
         </Field>
 
         <div className={styles.grid3}>
@@ -126,19 +134,18 @@ export default function NuevaEntregaPage({ session }) {
             </select>
           </Field>
           <Field label="Día">
-            <input
-              type="text"
-              value={form.dia || '—'}
-              readOnly
-              style={{ background: '#f4f6f9', color: 'var(--text2)', cursor: 'not-allowed' }}
-            />
+            <input type="text" value={form.dia || '—'} readOnly
+              style={{ background: '#f4f6f9', color: 'var(--text2)', cursor: 'not-allowed' }} />
           </Field>
         </div>
 
         <Field label="Nombre de quien entrega">
-          <input type="text" value={form.quien_entrega}
-            onChange={e => set('quien_entrega', e.target.value)}
-            placeholder="Nombre del responsable" />
+          <Autocomplete
+            value={form.quien_entrega}
+            onChange={v => set('quien_entrega', v)}
+            options={entregadores}
+            placeholder={entregadores.length > 0 ? 'Seleccione o escriba el nombre…' : 'Escriba el nombre del entregador…'}
+          />
         </Field>
 
         <Field label="Observaciones">
@@ -150,7 +157,8 @@ export default function NuevaEntregaPage({ session }) {
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.actions}>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/registros')}>
+          <button type="button" className="btn btn-secondary"
+            onClick={() => navigate('/registros')}>
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={loading}>

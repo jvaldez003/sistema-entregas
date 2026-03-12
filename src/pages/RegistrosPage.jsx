@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import Autocomplete from '../components/Autocomplete'
 import styles from './RegistrosPage.module.css'
 
 const RECURSOS = [
@@ -22,6 +23,17 @@ export default function RegistrosPage() {
   const [filtroMes, setFiltroMes] = useState('')
   const [filtroRecurso, setFiltroRecurso] = useState('')
   const [deleting, setDeleting] = useState(null)
+
+  // Listas autocomplete
+  const [docentes, setDocentes] = useState([])
+  const [entregadores, setEntregadores] = useState([])
+
+  useEffect(() => {
+    supabase.from('docentes').select('nombre').order('nombre')
+      .then(({ data }) => setDocentes((data || []).map(d => d.nombre)))
+    supabase.from('entregadores').select('nombre').order('nombre')
+      .then(({ data }) => setEntregadores((data || []).map(d => d.nombre)))
+  }, [])
 
   // Modal edición
   const [editId, setEditId] = useState(null)
@@ -155,8 +167,12 @@ export default function RegistrosPage() {
 
               <div className={styles.mField}>
                 <label>Docente / Solicitante *</label>
-                <input type="text" value={editForm.docente}
-                  onChange={e => setE('docente', e.target.value)} placeholder="Nombre completo" />
+                <Autocomplete
+                  value={editForm.docente}
+                  onChange={v => setE('docente', v)}
+                  options={docentes}
+                  placeholder="Buscar docente…"
+                />
               </div>
 
               <div className={styles.mGrid3}>
@@ -180,8 +196,12 @@ export default function RegistrosPage() {
 
               <div className={styles.mField}>
                 <label>Nombre de quien entrega</label>
-                <input type="text" value={editForm.quien_entrega}
-                  onChange={e => setE('quien_entrega', e.target.value)} placeholder="Responsable" />
+                <Autocomplete
+                  value={editForm.quien_entrega}
+                  onChange={v => setE('quien_entrega', v)}
+                  options={entregadores}
+                  placeholder="Buscar entregador…"
+                />
               </div>
 
               <div className={styles.mField}>
