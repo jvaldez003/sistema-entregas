@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import ConfirmModal from '../components/ConfirmModal'
 import styles from './AdminPage.module.css'
 
 // ── Mini gestor de una lista (docentes o entregadores) ──
@@ -10,6 +11,7 @@ function ListaManager({ tabla, titulo, placeholder }) {
   const [editVal, setEditVal] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [confirmId, setConfirmId] = useState(null)
 
   async function load() {
     const { data } = await supabase.from(tabla).select('*').order('nombre')
@@ -39,13 +41,20 @@ function ListaManager({ tabla, titulo, placeholder }) {
   }
 
   async function eliminar(id) {
-    if (!confirm('¿Eliminar este registro?')) return
     await supabase.from(tabla).delete().eq('id', id)
+    setConfirmId(null)
     load()
   }
 
   return (
     <div className={`card ${styles.listCard}`}>
+      <ConfirmModal
+        open={!!confirmId}
+        titulo={`Eliminar de ${titulo}`}
+        mensaje="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+        onConfirm={() => eliminar(confirmId)}
+        onCancel={() => setConfirmId(null)}
+      />
       <h2 className={styles.cardTitle}>{titulo}
         <span className={styles.badge}>{items.length}</span>
       </h2>
@@ -95,7 +104,7 @@ function ListaManager({ tabla, titulo, placeholder }) {
                     </button>
                     <button className="btn btn-icon btn-sm"
                       style={{ background: '#fdf0ef', color: 'var(--danger)', border: '1px solid #f5c2be' }}
-                      onClick={() => eliminar(item.id)}
+                      onClick={() => setConfirmId(item.id)}
                       title="Eliminar">🗑
                     </button>
                   </div>

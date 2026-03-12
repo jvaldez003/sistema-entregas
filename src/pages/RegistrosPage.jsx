@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Autocomplete from '../components/Autocomplete'
+import ConfirmModal from '../components/ConfirmModal'
 import styles from './RegistrosPage.module.css'
 
 const RECURSOS = [
@@ -23,6 +24,7 @@ export default function RegistrosPage() {
   const [filtroMes, setFiltroMes] = useState('')
   const [filtroRecurso, setFiltroRecurso] = useState('')
   const [deleting, setDeleting] = useState(null)
+  const [confirmId, setConfirmId] = useState(null)  // id a eliminar
 
   // Listas autocomplete
   const [docentes, setDocentes] = useState([])
@@ -52,10 +54,10 @@ export default function RegistrosPage() {
   useEffect(() => { load() }, [])
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar este registro?')) return
     setDeleting(id)
     await supabase.from('entregas').delete().eq('id', id)
     setDeleting(null)
+    setConfirmId(null)
     load()
   }
 
@@ -131,6 +133,14 @@ export default function RegistrosPage() {
 
   return (
     <div className={styles.page}>
+
+      <ConfirmModal
+        open={!!confirmId}
+        titulo="Eliminar registro"
+        mensaje="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+        onConfirm={() => handleDelete(confirmId)}
+        onCancel={() => setConfirmId(null)}
+      />
 
       {/* ── Modal edición ── */}
       {editId && (
@@ -289,7 +299,7 @@ export default function RegistrosPage() {
                         </button>
                         <button className="btn btn-icon btn-sm"
                           style={{ background: '#fdf0ef', color: 'var(--danger)', border: '1px solid #f5c2be' }}
-                          onClick={() => handleDelete(r.id)} disabled={deleting === r.id}>
+                          onClick={() => setConfirmId(r.id)} disabled={deleting === r.id}>
                           {deleting === r.id ? '…' : '🗑'}
                         </button>
                       </div>
