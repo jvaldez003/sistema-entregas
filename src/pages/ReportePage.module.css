@@ -1,38 +1,189 @@
-.page { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+.page {
+  padding: 28px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
 
-.header { margin-bottom: 24px; }
-.title  { font-size: 22px; font-weight: 700; }
-.sub    { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.header {
+  margin-bottom: 24px;
+}
 
-.selectorCard { padding: 24px 28px; }
-.selectorRow  { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.title {
+  font-size: 22px;
+  font-weight: 700;
+}
 
-.field  { display: flex; flex-direction: column; gap: 5px; }
-.label  { font-size: 13px; font-weight: 600; color: var(--text2); }
+.sub {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+
+.selectorCard {
+  padding: 24px 28px;
+}
+
+.selectorRow {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
 
 .previewHeader {
-  display: flex; justify-content: space-between; align-items: center;
-  margin: 24px 0 12px; gap: 12px; flex-wrap: wrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 24px 0 12px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.periodLabel { font-size: 16px; font-weight: 700; color: var(--text); text-transform: capitalize; }
+
+.periodLabel {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
 .countBadge {
   margin-left: 10px;
-  background: var(--accent-lt); color: var(--accent);
-  padding: 3px 10px; border-radius: 20px;
-  font-size: 12px; font-weight: 700;
+  background: var(--accent-lt);
+  color: var(--accent);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.empty { padding: 32px; text-align: center; color: var(--text3); }
+.empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--text3);
+}
 
-.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
 .table th {
-  padding: 10px 12px; background: var(--bg); color: var(--text2);
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
-  border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap;
+  padding: 10px 12px;
+  background: var(--bg);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
 }
+
 .table td {
-  padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
-.table tr:last-child td { border-bottom: none; }
-.table tr:hover td { background: #fafbfd; }
-.num { color: var(--text3); font-weight: 700; }
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: #fafbfd;
+}
+
+.num {
+  color: var(--text3);
+  font-weight: 700;
+}
+
+/* Personas */
+.personasCard {
+  padding: 20px 24px;
+  margin-top: 16px;
+}
+
+.personasTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.personasBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.personaBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: left;
+}
+
+.personaBtn:hover {
+  border-color: var(--accent);
+  background: var(--accent-lt);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, .1);
+}
+
+.personaBtnNombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.personaBtnCount {
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.personaBtnIcon {
+  font-size: 14px;
+  color: var(--accent);
+  margin-left: 4px;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 12px;
+  }
+
+  .selectorRow {
+    flex-direction: column;
+  }
+
+  .personasBtns {
+    flex-direction: column;
+  }
+
+  .personaBtn {
+    width: 100%;
+  }
+}
