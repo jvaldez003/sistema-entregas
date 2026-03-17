@@ -314,3 +314,123 @@
         flex-direction: column;
     }
 }
+
+/* WhatsApp panel */
+.waGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.waCard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: background .12s;
+}
+
+.waCard:hover {
+    background: #f0faf0;
+}
+
+.waAvatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #25d366;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.waInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.waNombre {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.waCelular {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 1px;
+}
+
+.waBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .14s;
+    flex-shrink: 0;
+}
+
+.waBtn:hover:not(:disabled) {
+    background: #128c4e;
+}
+
+.waBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .waCard {
+        flex-wrap: wrap;
+    }
+
+    .waBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Selector tipo mensaje */
+.tipoRow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.tipoBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text2);
+    transition: all .14s;
+}
+
+.tipoBtn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.tipoBtnActive {
+    border-color: var(--accent) !important;
+    background: var(--accent-lt) !important;
+    color: var(--accent) !important;
+}
