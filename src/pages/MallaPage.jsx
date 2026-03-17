@@ -236,8 +236,8 @@ export default function MallaPage() {
       .h-inst { font-size:7px; color:#bbb; letter-spacing:1px; text-transform:uppercase; text-align:right; margin-top:4px; }
 
       /* Grid que llena el espacio disponible */
-      .main-grid { display:grid; grid-template-columns:1fr 170px; grid-template-rows:1fr auto; gap:3.5mm; flex:1; }
-      .col-semana  { grid-column:1; grid-row:1; display:flex; flex-direction:column; }
+      .main-grid { display:grid; grid-template-columns:1fr 170px; grid-template-rows:1fr auto; gap:3.5mm; flex:1; min-height:0; }
+      .col-semana  { grid-column:1; grid-row:1; display:flex; flex-direction:column; min-height:0; }
       .col-sabados { grid-column:1; grid-row:2; }
       .col-right   { grid-column:2; grid-row:1/3; display:flex; flex-direction:column; gap:3mm; }
 
@@ -245,20 +245,21 @@ export default function MallaPage() {
       .sec-label { font-size:6.5px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#bbb; margin-bottom:2mm; display:flex; align-items:center; gap:6px; }
       .sec-label::after { content:''; flex:1; height:1px; background:#ebebeb; }
 
-      /* Tabla semana — se estira para llenar espacio */
-      .semana-wrap { flex:1; display:flex; flex-direction:column; }
-      .semana-table { width:100%; border-collapse:collapse; table-layout:fixed; height:100%; }
+      /* Tabla semana — filas se estiran para llenar */
+      .semana-wrap { flex:1; display:flex; flex-direction:column; min-height:0; }
+      .semana-table { width:100%; border-collapse:collapse; table-layout:fixed; flex:1; height:100%; }
       .semana-table thead tr { border-bottom:2px solid #111; }
-      .semana-table th { padding:6px; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:1px; text-align:center; color:#fff; background:#1a1a2e; }
-      .semana-table th.th-hora { text-align:left; padding-left:8px; width:100px; background:#111; color:rgba(255,255,255,0.6); }
+      .semana-table th { padding:7px 6px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:1px; text-align:center; color:#fff; background:#1a1a2e; }
+      .semana-table th.th-hora { text-align:left; padding-left:10px; width:105px; background:#111; color:rgba(255,255,255,0.6); }
       .semana-table tbody { height:100%; }
-      .semana-table td { padding:6px; vertical-align:middle; text-align:left; border-bottom:1px solid #ebebeb; border-right:1px solid #f0f0f0; }
+      .semana-table tr { height:50%; }
+      .semana-table td { vertical-align:top; text-align:left; border-bottom:1px solid #ebebeb; border-right:1px solid #f0f0f0; padding:10px 8px; }
       .semana-table td:last-child { border-right:none; }
       .semana-table tr:last-child td { border-bottom:none; }
       .semana-table tr:nth-child(even) td { background:#fafafa; }
-      .td-hora { text-align:left !important; padding-left:8px !important; font-size:7.5px !important; font-weight:700 !important; color:#fff !important; background:#2d2d2d !important; white-space:nowrap; border-right:none !important; vertical-align:middle !important; }
-      .nbadge { display:block; margin:1px 0; padding:2px 6px; font-size:8px; font-weight:700; color:#1a1a2e; line-height:1.4; border-left:2px solid #2563eb; background:#eff6ff; }
-      .nhora  { display:block; font-size:7px; font-weight:600; color:#2563eb; margin-top:1px; }
+      .td-hora { text-align:left !important; padding-left:10px !important; font-size:8.5px !important; font-weight:700 !important; color:#fff !important; background:#2d2d2d !important; white-space:nowrap; border-right:none !important; vertical-align:top !important; padding-top:12px !important; }
+      .nbadge { display:block; margin:3px 0; padding:5px 9px; font-size:10.5px; font-weight:700; color:#1a1a2e; line-height:1.4; border-left:3px solid #2563eb; background:#eff6ff; border-radius:2px; }
+      .nhora  { display:block; font-size:8.5px; font-weight:600; color:#2563eb; margin-top:2px; }
 
       /* Sábados */
       .sabs-wrap { display:flex; gap:3mm; }
