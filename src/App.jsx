@@ -1,13 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
-import LoginPage    from './pages/LoginPage'
+import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import NuevaEntregaPage from './pages/NuevaEntregaPage'
-import RegistrosPage    from './pages/RegistrosPage'
-import ReportePage      from './pages/ReportePage'
-import AdminPage        from './pages/AdminPage'
-import Layout           from './components/Layout'
+import RegistrosPage from './pages/RegistrosPage'
+import ReportePage from './pages/ReportePage'
+import AdminPage from './pages/AdminPage'
+import MallaPage from './pages/MallaPage'
+import Layout from './components/Layout'
 
 function RequireAuth({ session, children }) {
   if (!session) return <Navigate to="/login" replace />
@@ -25,10 +26,10 @@ export default function App() {
 
   if (session === undefined) {
     return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', color:'var(--text2)' }}>
-        <div style={{ textAlign:'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text2)' }}>
+        <div style={{ textAlign: 'center' }}>
           <div className="spinner" />
-          <p style={{ marginTop:12 }}>Cargando…</p>
+          <p style={{ marginTop: 12 }}>Cargando…</p>
         </div>
       </div>
     )
@@ -43,10 +44,11 @@ export default function App() {
         </RequireAuth>
       }>
         <Route index element={<DashboardPage session={session} />} />
-        <Route path="nueva"    element={<NuevaEntregaPage session={session} />} />
+        <Route path="nueva" element={<NuevaEntregaPage session={session} />} />
         <Route path="registros" element={<RegistrosPage session={session} />} />
-        <Route path="reporte"  element={<ReportePage session={session} />} />
-        <Route path="admin"    element={<AdminPage session={session} />} />
+        <Route path="reporte" element={<ReportePage session={session} />} />
+        <Route path="malla" element={<MallaPage session={session} />} />
+        <Route path="admin" element={<AdminPage session={session} />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

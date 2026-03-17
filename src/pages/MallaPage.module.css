@@ -1,0 +1,288 @@
+.page {
+    padding: 28px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 3px;
+}
+
+.section {
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+.sectionLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.sectionTitle {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* ── TABLA SEMANA ── */
+.mTable {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 640px;
+}
+
+.mTable th {
+    background: var(--accent);
+    color: #fff;
+    padding: 9px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    border: 1px solid var(--accent2);
+}
+
+.horaCol {
+    width: 130px;
+}
+
+.horaCell {
+    background: #1e3a5f;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: center;
+    border: 1px solid #2d5a9e;
+    white-space: nowrap;
+}
+
+.personaCell {
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    min-width: 120px;
+}
+
+/* ── CHIPS ── */
+.seleccionados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+/* Persona con hora inicio/fin */
+.personaItem {
+    background: #e8eef7;
+    border: 1px solid #c8d4e8;
+    border-radius: 6px;
+    padding: 4px 6px;
+    width: 100%;
+    margin-bottom: 3px;
+}
+
+.personaTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 3px;
+}
+
+.personaNombre {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.horasRow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.horaInput {
+    flex: 1;
+    font-size: 11px;
+    padding: 2px 5px;
+    border: 1px solid #c8d4e8;
+    border-radius: 4px;
+    background: #fff;
+    min-width: 0;
+    color: var(--text2);
+}
+
+.horaSep {
+    font-size: 11px;
+    color: var(--text3);
+    flex-shrink: 0;
+}
+
+.chipDel {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+}
+
+.chipDel:hover {
+    color: var(--danger);
+}
+
+/* Chip simple (sábados) */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e8eef7;
+    color: var(--accent);
+    border: 1px solid #c8d4e8;
+    border-radius: 20px;
+    padding: 3px 8px 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+}
+
+.chip button:hover {
+    color: var(--danger);
+}
+
+.addSelect {
+    width: 100%;
+    font-size: 12px;
+    padding: 4px 6px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text2);
+    cursor: pointer;
+}
+
+/* ── SÁBADOS ── */
+.sabGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.sabCard {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sabHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent);
+    padding: 8px 10px;
+    gap: 8px;
+}
+
+.sabFecha {
+    flex: 1;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+.sabFecha::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.sabDel {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 13px;
+}
+
+.sabFranja {
+    padding: 8px 10px;
+    border-top: 1px solid var(--border);
+}
+
+.sabFranjaLabel {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+}
+
+/* ── DIRECTORIO ── */
+.dirGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dirRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dirRow input {
+    flex: 1;
+    min-width: 140px;
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: 16px 12px;
+    }
+
+    .sabGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .sabGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .dirRow {
+        flex-direction: column;
+    }
+}

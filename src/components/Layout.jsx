@@ -8,6 +8,7 @@ const NAV = [
   { to: '/nueva', icon: '＋', label: 'Nueva' },
   { to: '/registros', icon: '☰', label: 'Registros' },
   { to: '/reporte', icon: '⎙', label: 'Reporte' },
+  { to: '/malla', icon: '📅', label: 'Turnos' },
   { to: '/admin', icon: '⚙', label: 'Usuarios' },
 ]
 
