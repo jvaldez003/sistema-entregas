@@ -103,6 +103,17 @@ export default function MallaPage() {
         setMalla(m => ({ ...m, pvd: m.pvd.filter((_, i) => i !== idx) }))
     }
     // Semana: cada celda guarda [{nombre, horaInicio, horaFin}]
+    function movePersona(dia, franja, nombre, dir) {
+        const key = `${dia}_${franja}`
+        const lista = normalizar(malla.semana[key] || [])
+        const idx = lista.findIndex(p => p.nombre === nombre)
+        if (idx === -1) return
+        const nueva = [...lista]
+        const swap = dir === 'up' ? idx - 1 : idx + 1
+        if (swap < 0 || swap >= nueva.length) return
+            ;[nueva[idx], nueva[swap]] = [nueva[swap], nueva[idx]]
+        setSemana(dia, franja, nueva)
+    }
     function agregarPersona(dia, franja, nombre) {
         const key = `${dia}_${franja}`
         const actual = normalizar(malla.semana[key] || [])
@@ -406,11 +417,15 @@ export default function MallaPage() {
                                         return (
                                             <td key={dia} className={styles.personaCell}>
                                                 <div className={styles.seleccionados}>
-                                                    {personas.map(p => (
+                                                    {personas.map((p, pi) => (
                                                         <div key={p.nombre} className={styles.personaItem}>
                                                             <div className={styles.personaTop}>
                                                                 <span className={styles.personaNombre}>{p.nombre}</span>
-                                                                <button className={styles.chipDel} onClick={() => quitarPersona(dia, f.id, p.nombre)}>×</button>
+                                                                <div className={styles.personaActions}>
+                                                                    <button className={styles.moveBtn} onClick={() => movePersona(dia, f.id, p.nombre, 'up')} disabled={pi === 0} title="Subir">↑</button>
+                                                                    <button className={styles.moveBtn} onClick={() => movePersona(dia, f.id, p.nombre, 'down')} disabled={pi === personas.length - 1} title="Bajar">↓</button>
+                                                                    <button className={styles.chipDel} onClick={() => quitarPersona(dia, f.id, p.nombre)}>×</button>
+                                                                </div>
                                                             </div>
                                                             <div className={styles.horasRow}>
                                                                 <input

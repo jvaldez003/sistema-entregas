@@ -106,6 +106,34 @@
     margin-bottom: 3px;
 }
 
+.personaActions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.moveBtn {
+    background: none;
+    border: 1px solid #c8d4e8;
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 10px;
+    line-height: 1;
+    padding: 1px 4px;
+    transition: background .1s;
+}
+
+.moveBtn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+}
+
+.moveBtn:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
 .personaNombre {
     font-size: 12px;
     font-weight: 700;
