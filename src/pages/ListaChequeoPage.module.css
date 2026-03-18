@@ -1,0 +1,320 @@
+.page {
+    padding: 28px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 3px;
+}
+
+/* Info card */
+.infoCard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+.label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+}
+
+/* Section cards */
+.sectionCard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.sectionSub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 3px;
+}
+
+/* Salones grid */
+.salonesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.salonCard {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-color .15s;
+}
+
+.salonCard:focus-within {
+    border-color: var(--accent);
+}
+
+.salonCardHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.salonNum {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.salonNombre {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    outline: none;
+    min-width: 0;
+}
+
+.salonNombre::placeholder {
+    color: var(--text3);
+    font-weight: 400;
+}
+
+.salonScore {
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.salonDel {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 16px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all .12s;
+}
+
+.salonDel:hover {
+    background: #fdf0ef;
+    color: var(--danger);
+}
+
+/* Check buttons */
+.checksGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 10px 12px;
+}
+
+.comunesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.checkBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all .14s;
+    text-align: left;
+    width: 100%;
+}
+
+.checkBtn:hover {
+    border-color: var(--accent);
+    background: var(--accent-lt);
+}
+
+.checkBtnOn {
+    border-color: #16a34a !important;
+    background: #f0fdf4 !important;
+}
+
+.checkBtnIcon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.checkBtnLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+}
+
+.checkBtnMark {
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+    color: var(--text3);
+}
+
+.checkBtnOn .checkBtnMark {
+    color: #16a34a;
+}
+
+.obsRow {
+    padding: 0 12px 10px;
+}
+
+.obsInput {
+    width: 100%;
+    font-size: 12px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text2);
+    font-family: inherit;
+}
+
+.obsInput::placeholder {
+    color: var(--text3);
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+/* History table */
+.histTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.histTable th {
+    padding: 10px 12px;
+    background: var(--bg);
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.histTable td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+
+.histTable tr:last-child td {
+    border-bottom: none;
+}
+
+.histTable tr:hover td {
+    background: #fafbfd;
+}
+
+.histBadge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .page {
+        padding: 16px 12px;
+    }
+
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .salonesGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .checksGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+    }
+
+    .actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

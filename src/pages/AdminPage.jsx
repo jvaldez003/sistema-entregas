@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import ConfirmModal from '../components/ConfirmModal'
 import styles from './AdminPage.module.css'
 
-// ── Mini gestor de una lista (docentes o entregadores) ──
+// ── Mini gestor de una lista (docentes o colaboradores) ──
 function ListaManager({ tabla, titulo, placeholder }) {
   const [items, setItems] = useState([])
   const [nuevo, setNuevo] = useState('')
@@ -133,8 +133,8 @@ export default function AdminPage({ session }) {
         />
         <ListaManager
           tabla="entregadores"
-          titulo="Nombre de quien entrega"
-          placeholder="Nombre del entregador…"
+          titulo="Colaboradores (Quien entrega)"
+          placeholder="Nombre del colaborador…"
         />
       </div>
 

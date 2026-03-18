@@ -8,6 +8,7 @@ import RegistrosPage from './pages/RegistrosPage'
 import ReportePage from './pages/ReportePage'
 import AdminPage from './pages/AdminPage'
 import MallaPage from './pages/MallaPage'
+import ListaChequeoPage from './pages/ListaChequeoPage'
 import Layout from './components/Layout'
 
 function RequireAuth({ session, children }) {
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="nueva" element={<NuevaEntregaPage session={session} />} />
         <Route path="registros" element={<RegistrosPage session={session} />} />
         <Route path="reporte" element={<ReportePage session={session} />} />
+        <Route path="chequeo" element={<ListaChequeoPage session={session} />} />
         <Route path="malla" element={<MallaPage session={session} />} />
         <Route path="admin" element={<AdminPage session={session} />} />
       </Route>

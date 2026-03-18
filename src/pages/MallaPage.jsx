@@ -175,13 +175,13 @@ export default function MallaPage() {
         if (sabLineas.length > 0) msg += `*Sábados asignados:*\n${sabLineas.join('\n')}\n\n`
         if (!turnosLineas.length && !sabLineas.length) msg += `_(Sin turnos asignados aún)_\n\n`
         msg += `_Cualquier duda comunícate con el coordinador._\n\n`
-        msg += `🔗 Ver cronograma completo: https://sistema-entregas-two.vercel.app/malla`
+        msg += `🔗 Ver cronograma completo: https://sistema-entregas-two.vercel.app/cronograma`
         return msg
     }
 
     function buildMensajeGeneral(contacto) {
         const base = mensajeGeneral.trim() ||
-            `🗓 *${malla.titulo}*\n📍 Alcaldía de Candelaria — Multicampus\n\nHola *{nombre}*, te compartimos el cronograma de turnos vigente.\n\nCualquier duda comunícate con el coordinador.\n\n🔗 Ver cronograma: https://sistema-entregas-two.vercel.app/malla`
+            `🗓 *${malla.titulo}*\n📍 Alcaldía de Candelaria — Multicampus\n\nHola *{nombre}*, te compartimos el cronograma de turnos vigente.\n\nCualquier duda comunícate con el coordinador.\n\n🔗 Ver cronograma: https://sistema-entregas-two.vercel.app/cronograma`
         return base.replace(/\{nombre\}/gi, contacto.nombre)
     }
 
@@ -203,162 +203,161 @@ export default function MallaPage() {
 
     function imprimir() {
         const win = window.open('', '_blank', 'width=1400,height=1000')
+
         const fmtFecha = f => {
             if (!f) return ''
             const [y, m, d] = f.split('-').map(Number)
-            const meses = ['', 'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
-            return `${d} ${meses[m]}`
+            const meses = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+            return `Sáb ${d} ${meses[m]}`
         }
+
         const celdaSemana = (dia, franja) => {
             const personas = normalizar(malla.semana[`${dia}_${franja}`] || [])
-            if (!personas.length) return '<span style="color:#ccc">—</span>'
+            if (!personas.length) return '<span style="color:#bbb">—</span>'
             return personas.map(p => {
-                const horario = p.horaInicio && p.horaFin ? `${p.horaInicio} - ${p.horaFin}` : p.horaInicio || p.horaFin || ''
-                return `<div class="nbadge">${p.nombre}${horario ? `<span class="nhora">${horario}</span>` : ''}</div>`
+                const h = p.horaInicio && p.horaFin ? `${p.horaInicio} – ${p.horaFin}` : ''
+                return `<div style="font-weight:700;font-size:9.5px;padding:3px 0;border-bottom:1px solid #eee">${p.nombre}${h ? `<div style="font-size:8px;color:#555;font-weight:600;margin-top:1px">${h}</div>` : ''}</div>`
             }).join('')
         }
-        const colSab = ['#111', '#2d2d2d', '#444', '#1a1a1a', '#333']
-        const bloquesSabados = malla.sabados.map((s, i) => {
+
+        const diasHeaders = DIAS.map(d => `<th>${d.toUpperCase()}</th>`).join('')
+        const franjaRows = FRANJAS.map((f, fi) =>
+            `<tr style="background:${fi % 2 === 0 ? '#f5f5f5' : '#fff'}">
+        <td style="background:#d9d9d9;font-weight:800;font-size:9px;text-align:center;padding:10px 6px;border:1px solid #999;white-space:nowrap">${f.label}</td>
+        ${DIAS.map(d => `<td style="padding:8px;border:1px solid #ccc;vertical-align:top">${celdaSemana(d, f.id)}</td>`).join('')}
+      </tr>`
+        ).join('')
+
+        const sabRows = malla.sabados.map((s, i) => {
             const s1 = (s.s1 || []).map(p => typeof p === 'string' ? p : p.nombre)
             const s2 = (s.s2 || []).map(p => typeof p === 'string' ? p : p.nombre)
-            return `<div class="sab-card"><div class="sab-head" style="background:${colSab[i % colSab.length]}">${fmtFecha(s.fecha)}</div><div class="sab-body"><div class="sab-row"><div class="sab-time">8:00 – 12:45 PM</div><div class="sab-names">${s1.map(n => `<span>${n}</span>`).join('') || '<span style="color:#bbb">—</span>'}</div></div><div class="sab-sep"></div><div class="sab-row"><div class="sab-time">2:00 – 6:00 PM</div><div class="sab-names">${s2.map(n => `<span>${n}</span>`).join('') || '<span style="color:#bbb">—</span>'}</div></div></div></div>`
+            return `<tr style="background:${i % 2 === 0 ? '#f5f5f5' : '#fff'}">
+        <td style="font-weight:800;font-size:9px;padding:7px 8px;border:1px solid #ccc">${fmtFecha(s.fecha)}</td>
+        <td style="padding:7px 8px;border:1px solid #ccc;font-size:9.5px">${s1.map(n => `<div style="font-weight:700">${n}</div>`).join('') || '<span style="color:#bbb">—</span>'}</td>
+        <td style="padding:7px 8px;border:1px solid #ccc;font-size:9.5px">${s2.map(n => `<div style="font-weight:700">${n}</div>`).join('') || '<span style="color:#bbb">—</span>'}</td>
+      </tr>`
         }).join('')
-        const dirItems = malla.directorio.map((c, i) =>
-            `<div class="dir-row"><div class="dir-num">${String(i + 1).padStart(2, '0')}</div><div><div class="dir-name">${c.nombre || ''}</div><div class="dir-tel">${c.celular || ''}</div></div></div>`
-        ).join('')
-        const pvdItems = malla.pvd.map(p =>
-            `<div class="pvd-row"><div><div class="pvd-dias">${p.dias || ''}</div><div class="pvd-hora">${p.hora || ''}</div></div><div class="pvd-persona">${p.persona || ''}</div></div>`
+
+        const dirRows = malla.directorio.map((c, i) =>
+            `<tr style="background:${i % 2 === 0 ? '#f5f5f5' : '#fff'}">
+        <td style="padding:6px 8px;border:1px solid #ccc;font-weight:700;font-size:9.5px">${c.nombre || ''}</td>
+        <td style="padding:6px 8px;border:1px solid #ccc;font-size:9.5px">${c.celular || ''}</td>
+      </tr>`
         ).join('')
 
-        const diasHeaders = DIAS.map(d => `<th>${d}</th>`).join('')
-        const franjaRows = FRANJAS.map(f =>
-            `<tr><td class="td-hora">${f.label}</td>${DIAS.map(d => `<td>${celdaSemana(d, f.id)}</td>`).join('')}</tr>`
+        const pvdRows = malla.pvd.map((p, i) =>
+            `<tr style="background:${i % 2 === 0 ? '#f5f5f5' : '#fff'}">
+        <td style="padding:6px 8px;border:1px solid #ccc;font-weight:700;font-size:9px">${p.dias || ''}</td>
+        <td style="padding:6px 8px;border:1px solid #ccc;font-size:9px">${p.hora || ''}</td>
+        <td style="padding:6px 8px;border:1px solid #ccc;font-weight:700;font-size:9.5px">${p.persona || ''}</td>
+      </tr>`
         ).join('')
 
-        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>${malla.titulo}</title><style>
+        const hasSab = malla.sabados.length > 0
+        const hasDir = malla.directorio.length > 0
+        const hasPvd = malla.pvd.length > 0
+
+        const html = `<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8"/><title>${malla.titulo}</title>
+    <style>
       * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; box-sizing:border-box; margin:0; padding:0; }
-      @page { size: A3 landscape; margin: 0; }
-      @media print { html,body { width:420mm; height:297mm; } }
-      body { font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif; background:#fff; color:#111; width:420mm; min-height:297mm; }
-      .layout { display:flex; min-height:297mm; }
-      .sidebar { width:12mm; background:#1a1a2e; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
-      .sidebar::after { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:#2563eb; }
-      .sidebar-text { writing-mode:vertical-rl; transform:rotate(180deg); font-size:7px; font-weight:800; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.5); white-space:nowrap; }
-      .content { flex:1; display:flex; flex-direction:column; padding:6mm 8mm 5mm 8mm; }
-      .header { display:flex; align-items:center; justify-content:space-between; padding-bottom:3.5mm; margin-bottom:3.5mm; border-bottom:2px solid #111; }
-      .h-titulo { font-size:21px; font-weight:900; letter-spacing:-0.5px; line-height:1; color:#111; text-transform:uppercase; }
-      .h-titulo span { color:#2563eb; }
-      .h-subtitulo { font-size:8px; font-weight:600; letter-spacing:3px; color:#999; text-transform:uppercase; margin-top:3px; }
-      .h-badge { display:inline-block; background:#1a1a2e; color:#fff; font-size:7px; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:5px 12px; border-radius:3px; }
-      .h-inst { font-size:7px; color:#bbb; letter-spacing:1px; text-transform:uppercase; text-align:right; margin-top:4px; }
-      .main-grid { display:grid; grid-template-columns:1fr 170px; grid-template-rows:1fr auto; gap:3.5mm; flex:1; min-height:0; }
-      .col-semana { grid-column:1; grid-row:1; display:flex; flex-direction:column; min-height:0; }
-      .col-sabados { grid-column:1; grid-row:2; }
-      .col-right { grid-column:2; grid-row:1/3; display:flex; flex-direction:column; gap:3mm; }
-      .sec-label { font-size:6.5px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#bbb; margin-bottom:2mm; display:flex; align-items:center; gap:6px; }
-      .sec-label::after { content:''; flex:1; height:1px; background:#ebebeb; }
-      .semana-wrap { flex:1; display:flex; flex-direction:column; min-height:0; }
-      .semana-table { width:100%; border-collapse:collapse; table-layout:fixed; height:100%; }
-      .semana-table thead tr { border-bottom:2px solid #111; }
-      .semana-table th { padding:7px 6px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:1px; text-align:center; color:#fff; background:#1a1a2e; }
-      .semana-table th.th-hora { text-align:left; padding-left:10px; width:105px; background:#111; color:rgba(255,255,255,0.6); }
-      .semana-table tbody { height:100%; }
-      .semana-table tr { height:50%; }
-      .semana-table td { vertical-align:top; text-align:left; border-bottom:1px solid #ebebeb; border-right:1px solid #f0f0f0; padding:10px 8px; }
-      .semana-table td:last-child { border-right:none; }
-      .semana-table tr:last-child td { border-bottom:none; }
-      .semana-table tr:nth-child(even) td { background:#fafafa; }
-      .td-hora { text-align:left !important; padding-left:10px !important; font-size:8.5px !important; font-weight:700 !important; color:#fff !important; background:#2d2d2d !important; white-space:nowrap; border-right:none !important; vertical-align:top !important; padding-top:12px !important; }
-      .nbadge { display:block; margin:3px 0; padding:5px 9px; font-size:10.5px; font-weight:700; color:#1a1a2e; line-height:1.4; border-left:3px solid #2563eb; background:#eff6ff; border-radius:2px; }
-      .nhora { display:block; font-size:8.5px; font-weight:600; color:#2563eb; margin-top:2px; }
-      .sabs-wrap { display:flex; gap:3mm; }
-      .sab-card { flex:1; border:1px solid #e5e5e5; border-radius:5px; overflow:hidden; border-top:3px solid #1a1a2e; }
-      .sab-head { padding:5px 8px; font-size:7.5px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:#fff; }
-      .sab-body { padding:5px 8px; }
-      .sab-row { margin-bottom:3px; }
-      .sab-row:last-child { margin-bottom:0; }
-      .sab-sep { height:1px; background:#f0f0f0; margin:3px 0; }
-      .sab-time { font-size:6.5px; color:#bbb; font-weight:700; margin-bottom:2px; text-transform:uppercase; letter-spacing:.5px; }
-      .sab-names { display:flex; flex-direction:column; gap:1px; }
-      .sab-names span { font-size:8px; font-weight:700; color:#1a1a2e; padding:1px 0; border-bottom:1px solid #f5f5f5; }
-      .sab-names span:last-child { border-bottom:none; }
-      .right-box { border:1px solid #e5e5e5; border-radius:5px; padding:3mm; border-top:2px solid #2563eb; }
-      .dir-row { display:flex; align-items:flex-start; gap:7px; padding:3.5px 0; border-bottom:1px solid #f5f5f5; }
-      .dir-row:last-child { border-bottom:none; }
-      .dir-num { font-size:7.5px; font-weight:900; color:#2563eb; width:14px; flex-shrink:0; margin-top:1px; }
-      .dir-name { font-size:8px; font-weight:700; color:#111; line-height:1.3; }
-      .dir-tel { font-size:7px; color:#999; margin-top:1px; }
-      .pvd-row { display:flex; align-items:center; justify-content:space-between; padding:3.5px 0; border-bottom:1px solid #f5f5f5; }
-      .pvd-row:last-child { border-bottom:none; }
-      .pvd-dias { font-size:7px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:.5px; }
-      .pvd-hora { font-size:6.5px; color:#aaa; margin:1px 0; }
-      .pvd-persona { font-size:8px; font-weight:700; color:#111; }
-      .footer { padding-top:3mm; border-top:1px solid #ebebeb; display:flex; justify-content:space-between; align-items:center; margin-top:auto; }
-      .footer-text { font-size:6.5px; color:#ccc; letter-spacing:2px; text-transform:uppercase; }
-      .footer-accent { display:flex; gap:3px; align-items:center; }
-      .footer-accent span { display:inline-block; height:2px; border-radius:2px; }
-      .footer-accent span:nth-child(1) { width:20px; background:#2563eb; }
-      .footer-accent span:nth-child(2) { width:12px; background:#1a1a2e; }
-      .footer-accent span:nth-child(3) { width:6px; background:#e5e5e5; }
-    </style></head><body>
-    <div class="layout">
-      <div class="sidebar"><div class="sidebar-text">Alcaldía de Candelaria &nbsp;·&nbsp; Valle del Cauca &nbsp;·&nbsp; Colombia</div></div>
-      <div class="content">
-        <div class="header">
-          <div>
-            <div class="h-titulo">Cronograma <span>de Turnos</span></div>
-            <div class="h-subtitulo">Multicampus Universitario</div>
-          </div>
-          <div>
-            <div class="h-badge">Vigente</div>
-            <div class="h-inst">Alcaldía de Candelaria · Valle del Cauca</div>
-          </div>
-        </div>
-        <div class="main-grid">
-          <div class="col-semana">
-            <div class="sec-label">Semana regular — Lunes a Viernes</div>
-            <div class="semana-wrap">
-              <table class="semana-table">
-                <thead><tr><th class="th-hora">Horario</th>${diasHeaders}</tr></thead>
-                <tbody>${franjaRows}</tbody>
-              </table>
-            </div>
-          </div>
-          <div class="col-right">
-            ${malla.directorio.length > 0 ? `<div class="right-box"><div class="sec-label">Directorio</div>${dirItems}</div>` : ''}
-            ${malla.pvd.length > 0 ? `<div class="right-box"><div class="sec-label">Punto Vive Digital</div>${pvdItems}</div>` : ''}
-          </div>
-          <div class="col-sabados">
-            <div class="sec-label">Sábados rotativos</div>
-            <div class="sabs-wrap">${bloquesSabados}</div>
-          </div>
-        </div>
-        <div class="footer">
-          <div class="footer-text">Cronograma Oficial de Turnos · Multicampus Universitario · Candelaria Valle</div>
-          <div class="footer-accent"><span></span><span></span><span></span></div>
-        </div>
+      @page { size: A3 landscape; margin: 8mm; }
+      body { font-family:Arial,sans-serif; font-size:10px; color:#000; background:#fff; }
+      .header-box { border:1.5px solid #000; display:flex; align-items:stretch; }
+      .header-logo { width:85px; min-height:75px; border-right:1.5px solid #000; display:flex; align-items:center; justify-content:center; padding:5px; flex-shrink:0; }
+      .header-logo img { max-width:72px; max-height:66px; object-fit:contain; }
+      .header-titles { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 20px; }
+      .header-org { font-size:12px; font-weight:700; text-align:center; }
+      .header-doc { font-size:14px; font-weight:900; text-align:center; margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+      .info-row { display:flex; border:1.5px solid #000; border-top:none; margin-bottom:8px; }
+      .info-cell { padding:5px 10px; font-size:10px; display:flex; align-items:center; gap:6px; }
+      .info-cell.label { background:#d9d9d9; font-weight:700; flex-shrink:0; font-size:9px; text-transform:uppercase; }
+      .info-cell.value { flex:1; border-right:1px solid #ccc; }
+      .info-cell.value:last-child { border-right:none; }
+      .sec-title { background:#d9d9d9; font-weight:800; font-size:9px; text-transform:uppercase; padding:5px 8px; border:1.5px solid #000; border-bottom:none; letter-spacing:0.5px; }
+      .semana-table { width:100%; border-collapse:collapse; border:1.5px solid #000; margin-bottom:8px; table-layout:fixed; }
+      .semana-table th { background:#d9d9d9; font-weight:800; font-size:9px; text-transform:uppercase; padding:6px 4px; text-align:center; border:1px solid #999; }
+      .semana-table th.th-hora { width:110px; }
+      .bottom-grid { display:grid; gap:8px; margin-bottom:8px; }
+      .sub-table { width:100%; border-collapse:collapse; border:1.5px solid #000; }
+      .sub-table th { background:#d9d9d9; font-weight:700; font-size:8.5px; text-transform:uppercase; padding:5px 6px; text-align:center; border:1px solid #999; }
+      .footer { border-top:1.5px solid #000; padding-top:5px; display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+      .footer-text { font-size:8px; color:#555; letter-spacing:1px; text-transform:uppercase; }
+      .footer-right { font-size:8px; color:#555; }
+    </style>
+    </head><body>
+
+    <div class="header-box">
+      <div class="header-logo">
+        <img src="${window.location.origin}/logo_candelaria.png" alt="Logo" onerror="this.style.display='none'" />
       </div>
+      <div class="header-titles">
+        <div class="header-org">ALCALDÍA DE CANDELARIA — VALLE DEL CAUCA, COLOMBIA</div>
+        <div class="header-doc">${malla.titulo}</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-cell label">Subprograma</div>
+      <div class="info-cell value">Accesos a la Educación Superior — Candelaria Valle del Cauca</div>
+      <div class="info-cell label">Estado</div>
+      <div class="info-cell value" style="font-weight:700">VIGENTE</div>
+    </div>
+
+    <div class="sec-title">Semana Regular — Lunes a Viernes</div>
+    <table class="semana-table">
+      <thead><tr>
+        <th class="th-hora">HORARIO</th>
+        ${diasHeaders}
+      </tr></thead>
+      <tbody>${franjaRows}</tbody>
+    </table>
+
+    ${hasSab || hasDir || hasPvd ? `
+    <div class="bottom-grid" style="grid-template-columns:${hasSab && (hasDir || hasPvd) ? '1fr 1fr' : hasSab ? '1fr' : '1fr'}">
+      ${hasSab ? `
+      <div>
+        <div class="sec-title">Sábados Rotativos</div>
+        <table class="sub-table">
+          <thead><tr>
+            <th style="width:90px">FECHA</th>
+            <th>8:00 AM – 12:45 PM</th>
+            <th>2:00 PM – 6:00 PM</th>
+          </tr></thead>
+          <tbody>${sabRows}</tbody>
+        </table>
+      </div>` : ''}
+      ${hasDir || hasPvd ? `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${hasDir ? `
+        <div>
+          <div class="sec-title">Directorio Telefónico</div>
+          <table class="sub-table">
+            <thead><tr><th>NOMBRE Y APELLIDO</th><th style="width:120px">CELULAR</th></tr></thead>
+            <tbody>${dirRows}</tbody>
+          </table>
+        </div>` : ''}
+        ${hasPvd ? `
+        <div>
+          <div class="sec-title">Punto Vive Digital</div>
+          <table class="sub-table">
+            <thead><tr><th>DÍAS</th><th>HORARIO</th><th>RESPONSABLE</th></tr></thead>
+            <tbody>${pvdRows}</tbody>
+          </table>
+        </div>` : ''}
+      </div>` : ''}
+    </div>` : ''}
+
+    <div class="footer">
+      <div class="footer-text">Alcaldía Municipal de Candelaria · Valle del Cauca · Cronograma Oficial de Turnos</div>
+      <div class="footer-right">Multicampus Universitario</div>
     </div>
     </body></html>`
 
         win.document.write(html)
         win.document.close()
-        setTimeout(() => {
-            const PX = 3.7795
-            const layout = win.document.querySelector('.layout')
-            if (layout) {
-                const scale = Math.min((420 * PX) / layout.scrollWidth, (297 * PX) / layout.scrollHeight)
-                if (scale !== 1) {
-                    win.document.body.style.margin = '0'; win.document.body.style.overflow = 'hidden'
-                    layout.style.transformOrigin = '0 0'
-                    layout.style.transform = `scale(${scale})`
-                    win.document.body.style.width = Math.round(layout.scrollWidth * scale) + 'px'
-                    win.document.body.style.height = Math.round(layout.scrollHeight * scale) + 'px'
-                }
-            }
-            win.print()
-        }, 700)
+        setTimeout(() => win.print(), 500)
     }
+
 
     if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Cargando…</div>
 

@@ -5,7 +5,7 @@ import styles from './ReportePage.module.css'
 const LOGO_URL = '/logo_candelaria.png'
 
 function buildPrintHTML({ filas, titulo, subtitulo, periodoLabel, firmante, observaciones, logoUrl }) {
-  const ROWS_PER_PAGE = 10
+  const ROWS_PER_PAGE = 8
   const pages = filas.length === 0 ? [[]] : []
   for (let i = 0; i < filas.length; i += ROWS_PER_PAGE) pages.push(filas.slice(i, i + ROWS_PER_PAGE))
 
@@ -124,8 +124,8 @@ function buildPrintHTML({ filas, titulo, subtitulo, periodoLabel, firmante, obse
     .info-cell.value { flex:1; border-right:1px solid #ccc; }
     .info-cell.value:last-child { border-right:none; }
     table { width:100%; border-collapse:collapse; border:1.5px solid #000; border-top:none; }
-    th { background:#d9d9d9; font-weight:700; font-size:9px; text-transform:uppercase; padding:5px 4px; text-align:center; border:1px solid #999; }
-    td { padding:0 6px; height:30px; border:1px solid #ccc; vertical-align:middle; font-size:9px; }
+    th { background:#d9d9d9; font-weight:700; font-size:9px; text-transform:uppercase; padding:7px 4px; text-align:center; border:1px solid #999; }
+    td { padding:10px 6px; height:38px; border:1px solid #ccc; vertical-align:middle; font-size:9px; }
     .total-row td { background:#d9d9d9; font-weight:700; font-size:10px; border:1px solid #999; }
     .obs-label { border:1.5px solid #000; border-top:none; padding:5px 10px; background:#d9d9d9; font-weight:700; font-size:10px; }
     .obs-box { border:1.5px solid #000; border-top:none; min-height:36px; padding:5px 10px; font-size:10px; white-space:pre-wrap; }
@@ -173,6 +173,109 @@ export default function ReportePage() {
       return `${d.toString().padStart(2, '0')} ${meses[m]} ${y}`
     }
     return `${fmtD(fechaInicio)} — ${fmtD(fechaFin)}`
+  }
+
+  function vistaPrevia() {
+    const win = window.open('', '_blank', 'width=1200,height=900')
+    const html = buildPrintHTML({
+      filas: rows,
+      titulo: 'ENTREGA DE RECURSOS TECNOLÓGICOS',
+      subtitulo: 'REPORTE GENERAL — MULTICAMPUS UNIVERSITARIO',
+      periodoLabel: fmtRango(),
+      firmante,
+      observaciones: obsGen,
+      logoUrl: window.location.origin + '/logo_candelaria.png',
+    })
+    win.document.write(html)
+    win.document.close()
+  }
+
+  function plantillaVacia() {
+    const win = window.open('', '_blank', 'width=1200,height=900')
+    const ROWS = 8
+    const filasVacias = Array(ROWS).fill(0).map((_, i) => `
+      <tr style="background:${i % 2 === 0 ? '#f5f6f8' : '#fff'}">
+        <td style="text-align:center;color:#bbb;font-weight:700">${i + 1}</td>
+        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+      </tr>`).join('')
+
+    const html = `<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8"/>
+    <title>Plantilla — Entrega de Recursos Tecnológicos</title>
+    <style>
+      * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; box-sizing:border-box; margin:0; padding:0; }
+      @page { size: A4 landscape; margin: 8mm; }
+      body { font-family:Arial,sans-serif; font-size:10px; color:#000; background:#fff; }
+      .header-box { border:1.5px solid #000; display:flex; align-items:stretch; }
+      .header-logo { width:80px; min-height:70px; border-right:1.5px solid #000; display:flex; align-items:center; justify-content:center; padding:4px; flex-shrink:0; }
+      .header-logo img { max-width:68px; max-height:62px; object-fit:contain; }
+      .header-titles { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px 16px; }
+      .header-org { font-size:11px; font-weight:700; text-align:center; }
+      .header-doc { font-size:10px; font-weight:700; text-align:center; margin-top:3px; text-transform:uppercase; }
+      .info-row { display:flex; border:1.5px solid #000; border-top:none; }
+      .info-cell { padding:6px 10px; font-size:10px; display:flex; align-items:center; gap:6px; }
+      .info-cell.label { background:#d9d9d9; font-weight:700; flex-shrink:0; }
+      .info-cell.value { flex:1; border-right:1px solid #ccc; min-width:120px; }
+      .info-cell.value:last-child { border-right:none; }
+      table { width:100%; border-collapse:collapse; border:1.5px solid #000; border-top:none; }
+      th { background:#d9d9d9; font-weight:700; font-size:9px; text-transform:uppercase; padding:7px 4px; text-align:center; border:1px solid #999; }
+      td { padding:10px 6px; height:38px; border:1px solid #ccc; vertical-align:middle; font-size:9px; }
+      .total-row td { background:#d9d9d9; font-weight:700; font-size:10px; border:1px solid #999; }
+      .obs-label { border:1.5px solid #000; border-top:none; padding:5px 10px; background:#d9d9d9; font-weight:700; font-size:10px; }
+      .obs-box { border:1.5px solid #000; border-top:none; min-height:40px; padding:5px 10px; }
+      .firma-wrap { margin-top:10px; display:flex; justify-content:center; }
+      .firma-box { width:240px; text-align:center; }
+      .firma-line { border-bottom:1.5px solid #000; height:36px; margin-bottom:4px; }
+      .firma-label { background:#d9d9d9; border:1px solid #999; font-weight:700; font-size:10px; padding:4px 8px; }
+    </style>
+    </head><body>
+    <div class="header-box">
+      <div class="header-logo">
+        <img src="${window.location.origin}/logo_candelaria.png" alt="Logo" onerror="this.style.display='none'" />
+      </div>
+      <div class="header-titles">
+        <div class="header-org">ALCALDÍA DE CANDELARIA — VALLE DEL CAUCA, COLOMBIA</div>
+        <div class="header-doc">ENTREGA DE RECURSOS TECNOLÓGICOS — MULTICAMPUS UNIVERSITARIO</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-cell label">PERÍODO</div>
+      <div class="info-cell value">&nbsp;</div>
+      <div class="info-cell label">SUBPROGRAMA</div>
+      <div class="info-cell value">Accesos a la educación superior — Candelaria Valle del Cauca</div>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:28px">#</th>
+        <th style="width:68px">FECHA</th>
+        <th style="width:18%">DOCENTE / SOLICITANTE</th>
+        <th style="width:14%">RECURSO</th>
+        <th style="width:40px">AULA</th>
+        <th style="width:55px">HORARIO</th>
+        <th style="width:60px">DÍA</th>
+        <th style="width:16%">QUIEN ENTREGA</th>
+        <th style="width:12%">FIRMA</th>
+      </tr></thead>
+      <tbody>
+        ${filasVacias}
+        <tr class="total-row">
+          <td colspan="8" style="text-align:right;padding-right:10px">TOTAL REGISTROS</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="obs-label">OBSERVACIONES</div>
+    <div class="obs-box"></div>
+    <div class="firma-wrap">
+      <div class="firma-box">
+        <div class="firma-line"></div>
+        <div class="firma-label">${firmante || 'PROFESIONAL DE APOYO'}</div>
+      </div>
+    </div>
+    </body></html>`
+
+    win.document.write(html)
+    win.document.close()
   }
 
   function imprimirGeneral() {
@@ -378,6 +481,12 @@ export default function ReportePage() {
           <textarea rows={2} value={obsGen} onChange={e => setObsGen(e.target.value)}
             placeholder="Notas del período, incidencias, aclaraciones…" />
         </div>
+
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button className="btn btn-secondary" onClick={plantillaVacia}>
+            📄 Plantilla en blanco (para llenar a mano)
+          </button>
+        </div>
       </div>
 
       {/* Resultados */}
@@ -394,6 +503,9 @@ export default function ReportePage() {
               }
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn btn-secondary" onClick={vistaPrevia}>
+                👁 Vista previa
+              </button>
               <button className="btn btn-secondary" onClick={imprimirTodosIndividual} disabled={personas.length === 0}>
                 👤 Imprimir todos individual
               </button>

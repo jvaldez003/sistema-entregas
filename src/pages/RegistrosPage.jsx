@@ -23,6 +23,7 @@ export default function RegistrosPage() {
   const [search, setSearch] = useState('')
   const [filtroMes, setFiltroMes] = useState('')
   const [filtroRecurso, setFiltroRecurso] = useState('')
+  const [filtroColaborador, setFiltroColaborador] = useState('')
   const [deleting, setDeleting] = useState(null)
   const [confirmId, setConfirmId] = useState(null)  // id a eliminar
 
@@ -128,7 +129,8 @@ export default function RegistrosPage() {
     const matchSearch = !q || r.docente?.toLowerCase().includes(q) || r.aula?.toLowerCase().includes(q) || r.recurso?.toLowerCase().includes(q)
     const matchMes = !filtroMes || r.fecha?.startsWith(filtroMes)
     const matchRec = !filtroRecurso || r.recurso === filtroRecurso
-    return matchSearch && matchMes && matchRec
+    const matchColaborador = !filtroColaborador || r.quien_entrega === filtroColaborador
+    return matchSearch && matchMes && matchRec && matchColaborador
   })
 
   return (
@@ -254,9 +256,13 @@ export default function RegistrosPage() {
           <option value="">Todos los recursos</option>
           {recursos.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
-        {(search || filtroMes || filtroRecurso) && (
+        <select value={filtroColaborador} onChange={e => setFiltroColaborador(e.target.value)}>
+          <option value="">Todos los colaboradores</option>
+          {entregadores.map(e => <option key={e} value={e}>{e}</option>)}
+        </select>
+        {(search || filtroMes || filtroRecurso || filtroColaborador) && (
           <button className="btn btn-secondary btn-sm"
-            onClick={() => { setSearch(''); setFiltroMes(''); setFiltroRecurso('') }}>
+            onClick={() => { setSearch(''); setFiltroMes(''); setFiltroRecurso(''); setFiltroColaborador('') }}>
             ✕ Limpiar
           </button>
         )}
