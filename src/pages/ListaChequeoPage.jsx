@@ -51,7 +51,7 @@ function buildChecklistHTML({ data, logoUrl }) {
   <title>Lista de Chequeo</title>
   <style>
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; box-sizing:border-box; margin:0; padding:0; }
-    @page { size: A4 landscape; margin: 10mm; }
+    @page { size: A4 landscape; margin: 8mm; }
     body { font-family:Arial,sans-serif; font-size:11px; color:#000; background:#fff; }
 
     .header-box { border:1.5px solid #000; display:flex; align-items:stretch; overflow:hidden; }
@@ -61,27 +61,27 @@ function buildChecklistHTML({ data, logoUrl }) {
     .header-org { font-size:12px; font-weight:700; text-align:center; color:#000; }
     .header-doc { font-size:14px; font-weight:900; text-align:center; color:#000; margin-top:4px; letter-spacing:0.5px; }
 
-    .info-row { display:flex; border:1.5px solid #000; border-top:none; margin-bottom:12px; }
-    .info-cell { padding:7px 12px; font-size:11px; display:flex; align-items:center; gap:6px; }
+    .info-row { display:flex; border:1.5px solid #000; border-top:none; margin-bottom:10px; }
+    .info-cell { padding:5px 10px; font-size:11px; display:flex; align-items:center; gap:6px; }
     .info-cell.label { background:#d9d9d9; font-weight:700; flex-shrink:0; font-size:10px; }
     .info-cell.value { flex:1; border-right:1px solid #ccc; font-weight:600; }
     .info-cell.value:last-child { border-right:none; }
 
-    .section-title { font-size:11px; font-weight:800; background:#d9d9d9; color:#000; padding:5px 10px; border:1.5px solid #000; border-bottom:none; letter-spacing:0.5px; text-transform:uppercase; }
+    .section-title { font-size:11px; font-weight:800; background:#d9d9d9; color:#000; padding:4px 8px; border:1.5px solid #000; border-bottom:none; letter-spacing:0.5px; text-transform:uppercase; }
 
-    table { width:100%; border-collapse:collapse; border:1.5px solid #000; margin-bottom:14px; }
-    th { background:#d9d9d9; font-weight:700; font-size:9px; text-transform:uppercase; padding:7px 5px; text-align:center; border:1px solid #999; color:#000; }
-    td { padding:14px 8px; border:1px solid #ccc; vertical-align:middle; min-height:46px; font-size:10px; }
+    table { width:100%; border-collapse:collapse; border:1.5px solid #000; margin-bottom:10px; }
+    th { background:#d9d9d9; font-weight:700; font-size:9px; text-transform:uppercase; padding:5px 4px; text-align:center; border:1px solid #999; color:#000; }
+    td { padding:6px 4px; border:1px solid #ccc; vertical-align:middle; height:32px; font-size:10px; }
 
-    .comunes-grid { display:grid; grid-template-columns:repeat(5,1fr) 2fr; border:1.5px solid #000; margin-bottom:14px; }
-    .comun-cell { padding:10px 8px; border-right:1px solid #ccc; text-align:center; }
-    .comun-cell:last-child { border-right:none; text-align:left; padding:10px; }
-    .comun-label { font-size:9px; font-weight:700; text-transform:uppercase; color:#555; margin-bottom:8px; letter-spacing:0.3px; }
+    .comunes-grid { display:grid; grid-template-columns:repeat(5,1fr) 2fr; border:1.5px solid #000; margin-bottom:10px; }
+    .comun-cell { padding:8px 6px; border-right:1px solid #ccc; text-align:center; }
+    .comun-cell:last-child { border-right:none; text-align:left; padding:8px 6px; }
+    .comun-label { font-size:9px; font-weight:700; text-transform:uppercase; color:#555; margin-bottom:6px; letter-spacing:0.3px; }
     .comun-check { font-size:16px; }
 
-    .firmas-row { display:flex; justify-content:space-around; margin-top:20px; gap:30px; }
+    .firmas-row { display:flex; justify-content:space-around; margin-top:15px; gap:30px; page-break-inside: avoid; }
     .firma-box { text-align:center; flex:1; max-width:280px; }
-    .firma-line { border-bottom:1.5px solid #000; margin-bottom:6px; height:40px; }
+    .firma-line { border-bottom:1.5px solid #000; margin-bottom:4px; height:35px; }
     .firma-label { background:#d9d9d9; border:1px solid #999; font-weight:700; font-size:10px; color:#000; padding:4px 8px; }
   </style>
   </head><body>
@@ -159,7 +159,7 @@ export default function ListaChequeoPage() {
     const [colaboradoresHistory, setColaboradoresHistory] = useState([])
 
     const [salones, setSalones] = useState([
-        { id: 1, nombre: '', aire: false, mesasDocentes: false, sillasUniv: false, iluminacion: false, estadoSalon: false, observacion: '' }
+        { id: 1, nombre: 'Salón 1', aire: false, mesasDocentes: false, sillasUniv: false, iluminacion: false, estadoSalon: false, observacion: '' }
     ])
     const [comunes, setComunes] = useState({
         extintores: false, banos: false, recipientes: false, ventanales: false, corredores: false, observacion: ''
@@ -182,7 +182,8 @@ export default function ListaChequeoPage() {
     useEffect(() => { if (view === 'history') loadHistory() }, [view])
 
     function addSalon() {
-        setSalones([...salones, { id: Date.now(), nombre: '', aire: false, mesasDocentes: false, sillasUniv: false, iluminacion: false, estadoSalon: false, observacion: '' }])
+        const nextNum = salones.length + 1
+        setSalones([...salones, { id: Date.now(), nombre: `Salón ${nextNum}`, aire: false, mesasDocentes: false, sillasUniv: false, iluminacion: false, estadoSalon: false, observacion: '' }])
     }
 
     function removeSalon(id) {
@@ -197,7 +198,7 @@ export default function ListaChequeoPage() {
     function resetForm() {
         setFecha(new Date().toISOString().split('T')[0])
         setColaborador('')
-        setSalones([{ id: 1, nombre: '', aire: false, mesasDocentes: false, sillasUniv: false, iluminacion: false, estadoSalon: false, observacion: '' }])
+        setSalones([{ id: 1, nombre: 'Salón 1', aire: false, mesasDocentes: false, sillasUniv: false, iluminacion: false, estadoSalon: false, observacion: '' }])
         setComunes({ extintores: false, banos: false, recipientes: false, ventanales: false, corredores: false, observacion: '' })
         setEditId(null)
     }
@@ -351,6 +352,12 @@ export default function ListaChequeoPage() {
                                     </div>
                                 )
                             })}
+                        </div>
+                        
+                        <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+                            <button className="btn btn-secondary" style={{ width: '100%', maxWidth: '300px', padding: '10px', fontSize: '14px', borderRadius: '8px' }} onClick={addSalon}>
+                                ＋ Agregar otro Salón
+                            </button>
                         </div>
                     </div>
 

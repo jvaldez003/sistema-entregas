@@ -9,6 +9,7 @@ import ReportePage from './pages/ReportePage'
 import AdminPage from './pages/AdminPage'
 import MallaPage from './pages/MallaPage'
 import ListaChequeoPage from './pages/ListaChequeoPage'
+import InventarioPage from './pages/InventarioPage'
 import Layout from './components/Layout'
 
 function RequireAuth({ session, children }) {
@@ -47,6 +48,7 @@ export default function App() {
         <Route index element={<DashboardPage session={session} />} />
         <Route path="nueva" element={<NuevaEntregaPage session={session} />} />
         <Route path="registros" element={<RegistrosPage session={session} />} />
+        <Route path="inventario" element={<InventarioPage session={session} />} />
         <Route path="reporte" element={<ReportePage session={session} />} />
         <Route path="chequeo" element={<ListaChequeoPage session={session} />} />
         <Route path="malla" element={<MallaPage session={session} />} />
