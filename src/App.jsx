@@ -12,6 +12,7 @@ import ListaChequeoPage from './pages/ListaChequeoPage'
 import InventarioPage from './pages/InventarioPage'
 import AsistenciaPage from './pages/AsistenciaPage'
 import ComunicadosPage from './pages/ComunicadosPage'
+import EntregaPapelesPage from './pages/EntregaPapelesPage'
 import Layout from './components/Layout'
 
 function RequireAuth({ session, children }) {
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="chequeo" element={<ListaChequeoPage session={session} />} />
         <Route path="malla" element={<MallaPage session={session} />} />
         <Route path="asistencia" element={<AsistenciaPage session={session} />} />
+        <Route path="papeles" element={<EntregaPapelesPage session={session} />} />
         <Route path="comunicados" element={<ComunicadosPage session={session} />} />
         <Route path="admin" element={<AdminPage session={session} />} />
       </Route>

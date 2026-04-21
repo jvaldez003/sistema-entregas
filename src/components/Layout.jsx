@@ -12,6 +12,7 @@ const NAV = [
   { to: '/reporte', icon: '⎙', label: 'Reporte' },
   { to: '/malla', icon: '📅', label: 'Turnos' },
   { to: '/asistencia', icon: '👥', label: 'Asistencia' },
+  { to: '/papeles', icon: '📄', label: 'Papeles' },
   { to: '/comunicados', icon: '✉', label: 'Comunicados' },
   { to: '/admin', icon: '⚙', label: 'Usuarios' },
 ];
