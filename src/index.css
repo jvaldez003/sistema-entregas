@@ -91,3 +91,14 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 
 /* ── Utility ── */
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+/* ── Print Utilities ── */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: white !important; }
+}
+
+@media screen {
+  .print-only { display: none !important; }
+}

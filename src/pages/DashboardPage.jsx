@@ -82,6 +82,10 @@ export default function DashboardPage({ session }) {
             <span className={styles.actionIcon}>☰</span>
             <span>Ver todos</span>
           </Link>
+          <Link to="/comunicados" className={`card ${styles.actionCard}`}>
+            <span className={styles.actionIcon}>✉</span>
+            <span>Comunicado</span>
+          </Link>
         </div>
       </div>
 

@@ -1,0 +1,37 @@
+R0:  | MUNICIPIO DE CANDELARIA
+LISTADO DE ASISTENCIA CON PRIMERA INFANCIA, INFANCIA, ADOLESCENCIA Y ACOMPAÑAMIENTO FAMILIAR |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | Código: 54-PSC-FT-621 |  | 
+R1:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | Fecha: 18-Nov-2024 |  | 
+R2:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | Versión: 7 |  | 
+R3:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | Página 1 de 1 |  | 
+R4:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | PROYECTO: |  |  |  |  |  | 
+R5: FECHA: |  | LUGAR DE ATENCIÓN :                                     |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | NOMBRE DE LA ACTIVIDAD: |  |  |  |  |  | 
+R6: NOMBRES Y APELLIDOS DEL NIÑO O NIÑA |  | TIPO DE IDENTIFICACIÓN | DOCUMENTO DE IDENTIFICACIÓN | EDAD | POBLACIONES DIFERENCIALES |  |  |  |  |  |  |  |  |  |  |  | NOMBRE DEL ADULTO RESPONSABLE | DIRECCIÓN | CORREGIMIENTO  | BARRIO/VEREDA | No. DE CONTACTO | FIRMA  |  | 
+R7:  |  |  |  |  | Sexo | Primera Infancia | Infancia | Adolescencia | Joven | Etnia | Víctimas Conflicto | LGTBIQ+ | Persona con Discapacidad | Religión | Migrante | Beneficiario de algún programa (especifique): |  |  |  |  |  |  |  | 
+R8:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R9:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R10:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R11:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R12:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R13:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R14:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R15:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R16:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R17:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R18:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R19:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R20: FIRMA DEL FUNCIONARIO:__________________________________________________________________ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R21: "Los asistentes aquí registrados autorizan: 
+1) El tratamiento de datos personales bajo las condiciones de la Ley 1581 de 2012 de Protección de Datos Personales del MINTIC.  2) El consentimiento para que se tomen fotografías y videos en formato digital o de otro tipo y cualquier otro medio de registro o reproducción de imágenes. Lo anterior, para los fines establecidos por la Administración Municipal de Candelaria Valle" |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R22: NOMBRES Y APELLIDOS DEL NIÑO O NIÑA |  | TIPO DE IDENTIFICACIÓN | DOCUMENTO DE IDENTIFICACIÓN | EDAD | POBLACIONES DIFERENCIALES |  |  |  |  |  |  |  |  |  |  |  | NOMBRE DEL ADULTO RESPONSABLE | DIRECCIÓN | CORREGIMIENTO / VEREDA | BARRIO | No. DE CONTACTO | FIRMA  |  | 
+R23:  |  |  |  |  | Sexo | Primera Infancia | Infancia | Adolescencia | Joven | Etnia | Víctimas Conflicto | LGTBIQ+ | Persona con Discapacidad | Religión | Migrante | Beneficiario de algún programa (especifique): |  |  |  |  |  |  |  | 
+R24:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R25:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R26:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R27:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R28:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R29:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R30:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R31:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R32:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R33:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+R34:  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 

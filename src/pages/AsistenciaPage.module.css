@@ -1,0 +1,342 @@
+.page {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text1);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+}
+
+.sub {
+    font-size: 15px;
+    color: var(--text3);
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.clearBtn {
+    background-color: #fdf0ef;
+    color: var(--danger);
+    border: 1px solid #f5c2be;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clearBtn:hover {
+    background-color: #f87171;
+    color: white;
+}
+
+.btnDanger:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   MODO IMPRESIÓN (PDF / PRINT) 
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media print {
+    :global(body) {
+        margin: 0;
+        padding: 0;
+        background: white !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    @page {
+        size: landscape;
+        margin: 10mm;
+    }
+
+    .printPage {
+        page-break-after: always;
+        width: 100%;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+    }
+
+    .printContainer {
+        border: 1px solid black;
+        padding: 0;
+    }
+
+    .headerTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2mm;
+    }
+
+    .headerTable td {
+        border: 1px solid black;
+        padding: 4px;
+        text-align: center;
+        font-size: 10px;
+        font-weight: bold;
+    }
+
+    .logoCell {
+        width: 15%;
+    }
+
+    .logoPlaceholder {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto;
+    }
+
+    .titleCell {
+        width: 70%;
+        font-size: 14px;
+    }
+
+    .versionCell {
+        width: 15%;
+        font-size: 8px;
+        text-align: left !important;
+    }
+
+    .subHeaderTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2mm;
+    }
+
+    .subHeaderTable td {
+        border: 1px solid black;
+        padding: 4px;
+        font-size: 9px;
+        text-align: left;
+    }
+
+    .printTable {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid black;
+    }
+
+    .printTable th, .printTable td {
+        border: 1px solid black;
+        padding: 2px;
+        font-size: 8px;
+        text-align: center;
+        height: 22px;
+    }
+
+    .printTable th {
+        background-color: #f2f2f2 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .subHeader th {
+        font-size: 7px;
+        width: 20px;
+    }
+
+    .textLeft {
+        text-align: left !important;
+        padding-left: 4px !important;
+    }
+
+    .printFooter {
+        margin-top: 5mm;
+    }
+
+    .signatureLine {
+        font-size: 10px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .legalNotice {
+        font-size: 7px;
+        font-style: italic;
+    }
+
+    .emptyRow td {
+        height: 25px;
+    }
+}
+
+/* Fallback para visualización normal */
+@media screen {
+    .print-only {
+        display: none;
+    }
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+}
+
+.searchInput {
+    flex: 1;
+    max-width: 400px;
+    padding: 10px 16px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.stats {
+    font-size: 14px;
+    color: var(--text2);
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--text2);
+    border-bottom: 1px solid #edf2f7;
+}
+
+.table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 14px;
+    color: var(--text1);
+}
+
+.nameCell {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.docCell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #475569;
+}
+
+.centerCell {
+    text-align: center;
+}
+
+.contactCell {
+    font-weight: 600;
+    color: #059669;
+}
+
+.genderBadge {
+    border: none;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 24px;
+}
+
+.genderF {
+    background: #fdf2f8;
+    color: #db2777;
+    border: 1px solid #fbcfe8;
+}
+
+.genderF:hover {
+    background: #db2777;
+    color: white;
+}
+
+.genderM {
+    background: #f0f9ff;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+}
+
+.genderM:hover {
+    background: #0284c7;
+    color: white;
+}
+
+.loading, .empty {
+    padding: 60px;
+    text-align: center;
+    color: var(--text3);
+    font-weight: 500;
+}
+
+.footerNote {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--text3);
+    font-style: italic;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    
+    .actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .actions button {
+        flex: 1;
+    }
+    
+    .filters {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+}

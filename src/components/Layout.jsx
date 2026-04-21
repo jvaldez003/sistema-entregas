@@ -11,8 +11,10 @@ const NAV = [
   { to: '/chequeo', icon: '☑', label: 'Chequeo' },
   { to: '/reporte', icon: '⎙', label: 'Reporte' },
   { to: '/malla', icon: '📅', label: 'Turnos' },
+  { to: '/asistencia', icon: '👥', label: 'Asistencia' },
+  { to: '/comunicados', icon: '✉', label: 'Comunicados' },
   { to: '/admin', icon: '⚙', label: 'Usuarios' },
-]
+];
 
 function Logo({ size = 28 }) {
   return (
@@ -56,7 +58,7 @@ export default function Layout({ session }) {
       )}
 
       {/* ── Sidebar ── */}
-      <aside className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''}`}>
+      <aside className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''} no-print`}>
         <div className={styles.sideTop}>
           <div className={styles.brand}>
             <Logo />
@@ -102,7 +104,7 @@ export default function Layout({ session }) {
       {/* ── Main ── */}
       <main className={styles.main}>
         {/* Topbar móvil */}
-        <div className={styles.topbar}>
+        <div className={`${styles.topbar} no-print`}>
           <button className={styles.menuBtn}
             onClick={() => { setCollapsed(false); setMobileOpen(o => !o) }}>
             ☰
@@ -121,7 +123,7 @@ export default function Layout({ session }) {
       </main>
 
       {/* Bottom nav móvil */}
-      <nav className={styles.bottomNav}>
+      <nav className={`${styles.bottomNav} no-print`}>
         {NAV.map(({ to, icon, label }) => (
           <NavLink
             key={to} to={to} end={to === '/'}
