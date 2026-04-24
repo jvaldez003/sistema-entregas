@@ -134,6 +134,19 @@ export const exportPapelesToExcel = async (data) => {
         // Estilo de las filas de datos
         sheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) {
+                const estado = row.getCell('estado').value;
+                
+                let rowBgColor = null;
+                let textColor = 'FF000000';
+
+                if (estado === 'SÍ ENTREGÓ') {
+                    rowBgColor = 'FFC6EFCE'; // Verde claro (Estilo Excel "Bueno")
+                    textColor = 'FF006100';  // Texto verde oscuro
+                } else if (estado === 'NO ENTREGÓ') {
+                    rowBgColor = 'FFFFC7CE'; // Rojo claro (Estilo Excel "Malo")
+                    textColor = 'FF9C0006';  // Texto rojo oscuro
+                }
+
                 row.eachCell((cell) => {
                     cell.border = {
                         top: { style: 'thin' },
@@ -142,8 +155,23 @@ export const exportPapelesToExcel = async (data) => {
                         right: { style: 'thin' }
                     };
                     cell.alignment = { vertical: 'middle' };
+                    
+                    // Alinear al centro columnas específicas (No, Cédula, Estado)
                     if (cell.col === 1 || cell.col === 3 || cell.col === 6) {
-                        cell.alignment = { horizontal: 'center' };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    }
+
+                    // Aplicar colores según el estado
+                    if (rowBgColor) {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: rowBgColor }
+                        };
+                        cell.font = { 
+                            color: { argb: textColor },
+                            size: 11
+                        };
                     }
                 });
             }

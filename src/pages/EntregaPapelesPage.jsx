@@ -12,6 +12,16 @@ export default function EntregaPapelesPage() {
     const [search, setSearch] = useState('')
     const [error, setError] = useState(null)
     const [showPreview, setShowPreview] = useState(false)
+    const [showFormModal, setShowFormModal] = useState(false)
+    const [modalMode, setModalMode] = useState('add') // 'add' o 'replace'
+    const [selectedItem, setSelectedItem] = useState(null)
+    const [formData, setFormData] = useState({
+        nombre_completo: '',
+        cedula: '',
+        correo: '',
+        telefono: ''
+    })
+    const [submitting, setSubmitting] = useState(false)
     const fileInputRef = useRef(null)
 
     useEffect(() => {
@@ -90,6 +100,86 @@ export default function EntregaPapelesPage() {
         else loadData()
     }
 
+    function openAddModal() {
+        setModalMode('add')
+        setSelectedItem(null)
+        setFormData({ nombre_completo: '', cedula: '', correo: '', telefono: '' })
+        setShowFormModal(true)
+    }
+
+    function openReplaceModal(item) {
+        setModalMode('replace')
+        setSelectedItem(item)
+        setFormData({
+            nombre_completo: '', // Limpiar para el nuevo
+            cedula: '',
+            correo: '',
+            telefono: ''
+        })
+        setShowFormModal(true)
+    }
+
+    function openEditModal(item) {
+        setModalMode('edit')
+        setSelectedItem(item)
+        setFormData({
+            nombre_completo: item.nombre_completo,
+            cedula: item.cedula,
+            correo: item.correo || '',
+            telefono: item.telefono || ''
+        })
+        setShowFormModal(true)
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault()
+        if (!formData.nombre_completo || !formData.cedula) {
+            return alert('Nombre y Cédula son obligatorios')
+        }
+
+        setSubmitting(true)
+        try {
+            if (modalMode === 'add') {
+                const { error } = await supabase
+                    .from('entrega_papeles')
+                    .insert([{
+                        ...formData,
+                        nombre_completo: formData.nombre_completo.toUpperCase(),
+                        estado_entrega: 'NO ENTREGÓ'
+                    }])
+                if (error) throw error
+            } else if (modalMode === 'replace') {
+                // Replace logic
+                const { error } = await supabase
+                    .from('entrega_papeles')
+                    .update({
+                        ...formData,
+                        nombre_completo: formData.nombre_completo.toUpperCase(),
+                        estado_entrega: 'NO ENTREGÓ'
+                    })
+                    .eq('id', selectedItem.id)
+                if (error) throw error
+            } else {
+                // Edit logic
+                const { error } = await supabase
+                    .from('entrega_papeles')
+                    .update({
+                        ...formData,
+                        nombre_completo: formData.nombre_completo.toUpperCase()
+                        // Mantener el estado_entrega original
+                    })
+                    .eq('id', selectedItem.id)
+                if (error) throw error
+            }
+            setShowFormModal(false)
+            loadData()
+        } catch (err) {
+            alert('Error: ' + err.message)
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
     const filtered = data.filter(d => 
         d.nombre_completo.toLowerCase().includes(search.toLowerCase()) ||
         d.cedula.includes(search)
@@ -154,6 +244,72 @@ export default function EntregaPapelesPage() {
                 </div>
             )}
 
+            {/* Modal de Formulario (Añadir/Remplazar) */}
+            {showFormModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowFormModal(false)}>
+                    <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2>{
+                                modalMode === 'add' ? '➕ Añadir Nueva Persona' : 
+                                modalMode === 'replace' ? '🔄 Remplazar Persona' : 
+                                '✏️ Editar Registro'
+                            }</h2>
+                            <button className={styles.modalClose} onClick={() => setShowFormModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleFormSubmit}>
+                            <div className={styles.modalBody}>
+                                {modalMode === 'replace' && (
+                                    <div className={styles.replaceNotice}>
+                                        Sustituyendo a: <strong>{selectedItem?.nombre_completo}</strong>
+                                    </div>
+                                )}
+                                <div className={styles.formGroup}>
+                                    <label>Nombre Completo</label>
+                                    <input 
+                                        required
+                                        value={formData.nombre_completo}
+                                        onChange={e => setFormData({...formData, nombre_completo: e.target.value})}
+                                        placeholder="Ej: JUAN PEREZ"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Cédula</label>
+                                    <input 
+                                        required
+                                        value={formData.cedula}
+                                        onChange={e => setFormData({...formData, cedula: e.target.value})}
+                                        placeholder="Número de identificación"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Correo (Opcional)</label>
+                                    <input 
+                                        type="email"
+                                        value={formData.correo}
+                                        onChange={e => setFormData({...formData, correo: e.target.value})}
+                                        placeholder="correo@ejemplo.com"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Teléfono (Opcional)</label>
+                                    <input 
+                                        value={formData.telefono}
+                                        onChange={e => setFormData({...formData, telefono: e.target.value})}
+                                        placeholder="Número de contacto"
+                                    />
+                                </div>
+                            </div>
+                            <div className={styles.modalFooter}>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowFormModal(false)}>Cancelar</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                                    {submitting ? 'Guardando...' : 'Confirmar Guardar'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div className={styles.header}>
                 <div>
                     <h1 className={styles.title}>Entrega de Papeles</h1>
@@ -162,6 +318,9 @@ export default function EntregaPapelesPage() {
                 <div className={styles.actions}>
                     <button className="btn btn-secondary" onClick={() => setShowPreview(true)} disabled={data.length === 0}>
                         📥 Descargar Reporte
+                    </button>
+                    <button className="btn btn-primary" style={{ background: '#059669' }} onClick={openAddModal}>
+                        ➕ Añadir Persona
                     </button>
                     <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()} disabled={importing}>
                         {importing ? 'Importando...' : '📤 Cargar Formato General'}
@@ -205,6 +364,7 @@ export default function EntregaPapelesPage() {
                                     <th>Correo</th>
                                     <th>Teléfono</th>
                                     <th>Estado Entrega</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -227,6 +387,24 @@ export default function EntregaPapelesPage() {
                                             >
                                                 {item.estado_entrega}
                                             </button>
+                                        </td>
+                                        <td>
+                                            <div className={styles.actionsCell}>
+                                                <button 
+                                                    className={styles.editBtn}
+                                                    onClick={() => openEditModal(item)}
+                                                    title="Editar información"
+                                                >
+                                                    ✏️ Editar
+                                                </button>
+                                                <button 
+                                                    className={styles.replaceBtn}
+                                                    onClick={() => openReplaceModal(item)}
+                                                    title="Remplazar persona"
+                                                >
+                                                    🔄 Remplazar
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
