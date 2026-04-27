@@ -22,6 +22,7 @@ export default function EntregaPapelesPage() {
         telefono: ''
     })
     const [submitting, setSubmitting] = useState(false)
+    const [statusFilter, setStatusFilter] = useState('TODOS')
     const fileInputRef = useRef(null)
 
     useEffect(() => {
@@ -180,10 +181,12 @@ export default function EntregaPapelesPage() {
         }
     }
 
-    const filtered = data.filter(d => 
-        d.nombre_completo.toLowerCase().includes(search.toLowerCase()) ||
-        d.cedula.includes(search)
-    )
+    const filtered = data.filter(d => {
+        const matchesSearch = d.nombre_completo.toLowerCase().includes(search.toLowerCase()) ||
+                              d.cedula.includes(search)
+        const matchesStatus = statusFilter === 'TODOS' || d.estado_entrega === statusFilter
+        return matchesSearch && matchesStatus
+    })
 
     const stats = {
         total: data.length,
@@ -352,6 +355,39 @@ export default function EntregaPapelesPage() {
                             Entregaron: <strong style={{color: '#16a34a'}}>{stats.entregaron}</strong> | 
                             Pendientes: <strong style={{color: '#dc2626'}}>{stats.noEntregaron}</strong>
                         </div>
+                    </div>
+                    
+                    <div className={styles.filterTabs}>
+                        <button 
+                            className={`${styles.tab} ${statusFilter === 'TODOS' ? styles.tabActive : ''}`}
+                            onClick={() => setStatusFilter('TODOS')}
+                        >
+                            Todos <span>({stats.total})</span>
+                        </button>
+                        <button 
+                            className={`${styles.tab} ${statusFilter === 'SÍ ENTREGÓ' ? styles.tabActive : ''}`}
+                            onClick={() => setStatusFilter('SÍ ENTREGÓ')}
+                        >
+                            Entregaron <span>({stats.entregaron})</span>
+                        </button>
+                        <button 
+                            className={`${styles.tab} ${statusFilter === 'NO ENTREGÓ' ? styles.tabActive : ''}`}
+                            onClick={() => setStatusFilter('NO ENTREGÓ')}
+                        >
+                            No Entregaron <span>({stats.noEntregaron})</span>
+                        </button>
+                        <button 
+                            className={`${styles.tab} ${statusFilter === 'APLICA' ? styles.tabActive : ''}`}
+                            onClick={() => setStatusFilter('APLICA')}
+                        >
+                            Aplica <span>({stats.aplica})</span>
+                        </button>
+                        <button 
+                            className={`${styles.tab} ${statusFilter === 'NO APLICA' ? styles.tabActive : ''}`}
+                            onClick={() => setStatusFilter('NO APLICA')}
+                        >
+                            No Aplica <span>({stats.noAplica})</span>
+                        </button>
                     </div>
 
                     <div className={styles.tableContainer}>
