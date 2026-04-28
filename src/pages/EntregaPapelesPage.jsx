@@ -1,9 +1,103 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { importPapelesFromExcel, exportPapelesToExcel } from '../services/papelesService'
+import Select from 'react-select'
 import styles from './EntregaPapelesPage.module.css'
 
 const ESTADOS = ['SÍ ENTREGÓ', 'NO ENTREGÓ', 'APLICA', 'NO APLICA']
+
+const opcionesResidencia = [
+    { value: 'Cabecera Municipal', label: 'Cabecera Municipal' },
+    { value: 'Villagorgona', label: 'Villagorgona' },
+    { value: 'El Carmelo', label: 'El Carmelo' },
+    { value: 'Poblado Campestre', label: 'Poblado Campestre' },
+    { value: 'San Joaquín', label: 'San Joaquín' },
+    { value: 'El Tiple', label: 'El Tiple' },
+    { value: 'Juanchito', label: 'Juanchito' },
+    { value: 'San Vicente', label: 'San Vicente' },
+    { value: 'Buchitolo', label: 'Buchitolo' },
+    { value: 'El Arenal', label: 'El Arenal' },
+    { value: 'El Lauro', label: 'El Lauro' },
+    { value: 'Domingo Largo', label: 'Domingo Largo' },
+    { value: 'La Victoria', label: 'La Victoria' },
+    { value: 'Otro', label: 'Otro' }
+];
+
+const opcionesDestino = [
+    { value: 'Cali', label: 'Cali' },
+    { value: 'Palmira', label: 'Palmira' },
+    { value: 'Candelaria', label: 'Candelaria' },
+    { value: 'Yumbo', label: 'Yumbo' },
+    { value: 'Otro', label: 'Otro' }
+];
+
+const opcionesRuta = [
+    { value: 'Ruta 1', label: 'Ruta 1' },
+    { value: 'Ruta 2', label: 'Ruta 2' },
+    { value: 'Ruta 3', label: 'Ruta 3' },
+    { value: 'Ruta 4', label: 'Ruta 4' },
+    { value: 'Ruta 5', label: 'Ruta 5' }
+];
+
+const opcionesUniversidad = [
+    // Candelaria
+    { value: 'INTEP - Candelaria', label: 'INTEP - Candelaria' },
+    { value: 'SENA - Candelaria', label: 'SENA - Candelaria' },
+    
+    // Univalle
+    { value: 'Universidad del Valle - Cali', label: 'Universidad del Valle - Cali' },
+    { value: 'Universidad del Valle - Palmira', label: 'Universidad del Valle - Palmira' },
+    { value: 'Universidad del Valle - Yumbo', label: 'Universidad del Valle - Yumbo' },
+    
+    // SENA
+    { value: 'SENA - Cali', label: 'SENA - Cali' },
+    { value: 'SENA - Palmira', label: 'SENA - Palmira' },
+    { value: 'SENA - Yumbo', label: 'SENA - Yumbo' },
+    
+    // Nacional
+    { value: 'Universidad Nacional - Palmira', label: 'Universidad Nacional - Palmira' },
+    
+    // USC
+    { value: 'Universidad Santiago de Cali - Cali', label: 'Universidad Santiago de Cali - Cali' },
+    { value: 'Universidad Santiago de Cali - Palmira', label: 'Universidad Santiago de Cali - Palmira' },
+    
+    // Privadas Cali
+    { value: 'Universidad Icesi - Cali', label: 'Universidad Icesi - Cali' },
+    { value: 'Pontificia Universidad Javeriana - Cali', label: 'Pontificia Universidad Javeriana - Cali' },
+    { value: 'Universidad Autónoma de Occidente (UAO) - Cali', label: 'Universidad Autónoma de Occidente (UAO) - Cali' },
+    { value: 'Universidad San Buenaventura - Cali', label: 'Universidad San Buenaventura - Cali' },
+    { value: 'Universidad Libre - Cali', label: 'Universidad Libre - Cali' },
+    { value: 'Institución Universitaria Antonio José Camacho - Cali', label: 'Institución Universitaria Antonio José Camacho - Cali' },
+    { value: 'Escuela Nacional del Deporte - Cali', label: 'Escuela Nacional del Deporte - Cali' },
+    { value: 'Bellas Artes - Cali', label: 'Bellas Artes - Cali' },
+    
+    // Privadas Palmira
+    { value: 'Corporación Universitaria Remington - Palmira', label: 'Corporación Universitaria Remington - Palmira' },
+    { value: 'Universidad Pontificia Bolivariana (UPB) - Palmira', label: 'Universidad Pontificia Bolivariana (UPB) - Palmira' },
+    
+    // Otros
+    { value: 'Otro', label: 'Otro' }
+];
+
+const selectStyles = {
+    control: (base) => ({
+        ...base,
+        minHeight: '42px',
+        borderRadius: '8px',
+        borderColor: '#e2e8f0',
+        boxShadow: 'none',
+        '&:hover': {
+            borderColor: '#0284c7'
+        }
+    }),
+    option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected ? '#0284c7' : state.isFocused ? '#e0f2fe' : 'white',
+        color: state.isSelected ? 'white' : '#334155',
+        cursor: 'pointer'
+    }),
+    menuPortal: base => ({ ...base, zIndex: 9999 })
+};
 
 export default function EntregaPapelesPage() {
     const [data, setData] = useState([])
@@ -113,7 +207,7 @@ export default function EntregaPapelesPage() {
         setSelectedItem(null)
         setFormData({ 
             nombre_completo: '', cedula: '', correo: '', telefono: '',
-            residencia: '', destino: '', horario: '', ruta: '',
+            residencia: '', destino: '', universidad: '', horario: '', ruta: '',
             dia_lunes: false, dia_martes: false, dia_miercoles: false, 
             dia_jueves: false, dia_viernes: false, dia_sabado: false
         })
@@ -145,6 +239,7 @@ export default function EntregaPapelesPage() {
             telefono: item.telefono || '',
             residencia: item.residencia || '',
             destino: item.destino || '',
+            universidad: item.universidad || '',
             horario: item.horario || '',
             ruta: item.ruta || '',
             dia_lunes: !!item.dia_lunes,
@@ -327,24 +422,45 @@ export default function EntregaPapelesPage() {
                                     />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label>Residencia (Opcional)</label>
-                                    <input 
-                                        value={formData.residencia}
-                                        onChange={e => setFormData({...formData, residencia: e.target.value})}
-                                        placeholder="Lugar de residencia"
+                                    <label>Residencia</label>
+                                    <Select 
+                                        options={opcionesResidencia}
+                                        value={opcionesResidencia.find(o => o.value === formData.residencia) || (formData.residencia ? { value: formData.residencia, label: formData.residencia } : null)}
+                                        onChange={selected => setFormData({ ...formData, residencia: selected ? selected.value : '' })}
+                                        placeholder="Seleccione o busque..."
+                                        isClearable
+                                        styles={selectStyles}
+                                        menuPortalTarget={document.body}
                                     />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label>Destino (Opcional)</label>
-                                    <input 
-                                        value={formData.destino}
-                                        onChange={e => setFormData({...formData, destino: e.target.value})}
-                                        placeholder="Destino de viaje"
+                                    <label>Destino</label>
+                                    <Select 
+                                        options={opcionesDestino}
+                                        value={opcionesDestino.find(o => o.value === formData.destino) || (formData.destino ? { value: formData.destino, label: formData.destino } : null)}
+                                        onChange={selected => setFormData({ ...formData, destino: selected ? selected.value : '' })}
+                                        placeholder="Seleccione o busque..."
+                                        isClearable
+                                        styles={selectStyles}
+                                        menuPortalTarget={document.body}
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Universidad</label>
+                                    <Select 
+                                        options={opcionesUniversidad}
+                                        value={opcionesUniversidad.find(o => o.value === formData.universidad) || (formData.universidad ? { value: formData.universidad, label: formData.universidad } : null)}
+                                        onChange={selected => setFormData({ ...formData, universidad: selected ? selected.value : '' })}
+                                        placeholder="Seleccione o busque..."
+                                        isClearable
+                                        styles={selectStyles}
+                                        menuPortalTarget={document.body}
                                     />
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Horario (Opcional)</label>
                                     <input 
+                                        className={styles.input}
                                         value={formData.horario}
                                         onChange={e => setFormData({...formData, horario: e.target.value})}
                                         placeholder="Ej: 08:00 - 17:00"
@@ -352,18 +468,15 @@ export default function EntregaPapelesPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Ruta Asignada</label>
-                                    <select 
-                                        value={formData.ruta}
-                                        onChange={e => setFormData({...formData, ruta: e.target.value})}
-                                        style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border)', width: '100%' }}
-                                    >
-                                        <option value="">Seleccione una ruta...</option>
-                                        <option value="Ruta 1">Ruta 1</option>
-                                        <option value="Ruta 2">Ruta 2</option>
-                                        <option value="Ruta 3">Ruta 3</option>
-                                        <option value="Ruta 4">Ruta 4</option>
-                                        <option value="Ruta 5">Ruta 5</option>
-                                    </select>
+                                    <Select 
+                                        options={opcionesRuta}
+                                        value={opcionesRuta.find(o => o.value === formData.ruta) || (formData.ruta ? { value: formData.ruta, label: formData.ruta } : null)}
+                                        onChange={selected => setFormData({ ...formData, ruta: selected ? selected.value : '' })}
+                                        placeholder="Seleccione o busque..."
+                                        isClearable
+                                        styles={selectStyles}
+                                        menuPortalTarget={document.body}
+                                    />
                                 </div>
                                 <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
                                     <label>Días de Viaje</label>
@@ -478,6 +591,7 @@ export default function EntregaPapelesPage() {
                                     <th>Nombre Completo</th>
                                     <th>Cédula</th>
                                     <th>Correo / Tel</th>
+                                    <th>Universidad</th>
                                     <th>Ruta</th>
                                     <th>Semanal</th>
                                     <th>Mensual</th>
@@ -502,9 +616,10 @@ export default function EntregaPapelesPage() {
                                             <div style={{ color: 'var(--text3)' }}>{item.correo || '—'}</div>
                                             <div>{item.telefono || '—'}</div>
                                         </td>
+                                        <td>{item.universidad || '—'}</td>
                                         <td>{item.ruta || '—'}</td>
-                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSemanal > 0 ? totalSemanal : '—'}</td>
-                                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#0284c7' }}>{totalMensual > 0 ? totalMensual : '—'}</td>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSemanal}</td>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#0284c7' }}>{totalMensual}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                                 <select

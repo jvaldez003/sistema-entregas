@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.entrega_papeles (
   estado_entrega      TEXT         DEFAULT 'NO ENTREGÓ', -- Opciones: SÍ ENTREGÓ, NO ENTREGÓ, APLICA, NO APLICA
   residencia          TEXT,
   destino             TEXT,
+  universidad         TEXT,
   horario             TEXT,
   ruta                TEXT,
   dia_lunes           BOOLEAN      DEFAULT false,
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS public.entrega_papeles (
 ALTER TABLE public.entrega_papeles
 ADD COLUMN residencia TEXT,
 ADD COLUMN destino TEXT,
+ADD COLUMN universidad TEXT,
 ADD COLUMN horario TEXT,
 ADD COLUMN ruta TEXT,
 ADD COLUMN dia_lunes BOOLEAN DEFAULT false,

@@ -98,20 +98,7 @@
   background: #fcfdfe;
 }
 
-/* Make Actions column sticky on desktop */
-@media (min-width: 769px) {
-  .table th:last-child,
-  .table td:last-child {
-    position: sticky;
-    right: 0;
-    border-left: 1px solid var(--border);
-  }
-  .table th:last-child {
-    z-index: 6;
-    background: #f8fafc;
-  }
-}
-
+/* Removed sticky Actions column as it was covering data columns */
 /* Status Badges */
 .statusBadge {
   padding: 4px 10px;
