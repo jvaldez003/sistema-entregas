@@ -307,7 +307,6 @@
     background: rgba(255, 255, 255, .22);
   }
 
-  /* Bottom nav */
   .bottomNav {
     display: flex;
     position: fixed;
@@ -319,10 +318,17 @@
     box-shadow: 0 -2px 12px rgba(0, 0, 0, .08);
     z-index: 100;
     height: 62px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .bottomNav::-webkit-scrollbar {
+    display: none;
   }
 
   .bottomItem {
-    flex: 1;
+    flex: 0 0 auto;
+    min-width: 75px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -333,7 +339,7 @@
     font-size: 10px;
     font-weight: 500;
     transition: color .14s;
-    padding: 6px 2px;
+    padding: 6px 8px;
   }
 
   .bottomItem:hover {
