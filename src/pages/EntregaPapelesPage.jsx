@@ -89,10 +89,7 @@ export default function EntregaPapelesPage() {
         }
     }
 
-    async function cycleStatus(item) {
-        const currentIdx = ESTADOS.indexOf(item.estado_entrega)
-        const nextStatus = ESTADOS[(currentIdx + 1) % ESTADOS.length]
-        
+    async function changeStatus(item, nextStatus) {
         const { error } = await supabase
             .from('entrega_papeles')
             .update({ estado_entrega: nextStatus })
@@ -510,17 +507,21 @@ export default function EntregaPapelesPage() {
                                         <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#0284c7' }}>{totalMensual > 0 ? totalMensual : '—'}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                                <button 
-                                                    className={`${styles.statusBadge} ${
+                                                <select
+                                                    value={item.estado_entrega}
+                                                    onChange={(e) => changeStatus(item, e.target.value)}
+                                                    className={`${styles.statusSelect} ${
                                                         item.estado_entrega === 'SÍ ENTREGÓ' ? styles.statusSi :
                                                         item.estado_entrega === 'NO ENTREGÓ' ? styles.statusNo :
                                                         item.estado_entrega === 'APLICA' ? styles.statusAplica :
                                                         styles.statusNoAplica
                                                     }`}
-                                                    onClick={() => cycleStatus(item)}
                                                 >
-                                                    {item.estado_entrega}
-                                                </button>
+                                                    <option value="SÍ ENTREGÓ">SÍ ENTREGÓ</option>
+                                                    <option value="NO ENTREGÓ">NO ENTREGÓ</option>
+                                                    <option value="APLICA">APLICA</option>
+                                                    <option value="NO APLICA">NO APLICA</option>
+                                                </select>
                                                 <div className={styles.actionsCell} style={{ borderLeft: '1px solid var(--border)', paddingLeft: '10px' }}>
                                                     <button 
                                                         className={styles.editBtn}
