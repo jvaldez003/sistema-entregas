@@ -98,16 +98,18 @@
   background: #fcfdfe;
 }
 
-/* Make Actions column sticky */
-.table th:last-child,
-.table td:last-child {
-  position: sticky;
-  right: 0;
-  border-left: 1px solid var(--border);
-}
-.table th:last-child {
-  z-index: 6;
-  background: #f8fafc;
+/* Make Actions column sticky on desktop */
+@media (min-width: 769px) {
+  .table th:last-child,
+  .table td:last-child {
+    position: sticky;
+    right: 0;
+    border-left: 1px solid var(--border);
+  }
+  .table th:last-child {
+    z-index: 6;
+    background: #f8fafc;
+  }
 }
 
 /* Status Badges */
