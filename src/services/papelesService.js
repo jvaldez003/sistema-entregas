@@ -24,6 +24,16 @@ export const importPapelesFromExcel = async (file) => {
                     cedula: ['cédula', 'cedula', 'identificacion', 'documento', 'cc', 'ti'],
                     correo: ['correo', 'email', 'e-mail'],
                     telefono: ['teléfono', 'telefono', 'celular', 'tel'],
+                    residencia: ['residencia', 'barrio', 'direccion', 'dirección'],
+                    destino: ['destino', 'lugar'],
+                    horario: ['horario', 'hora'],
+                    ruta: ['ruta', 'bus'],
+                    dia_lunes: ['lunes'],
+                    dia_martes: ['martes'],
+                    dia_miercoles: ['miercoles', 'miércoles'],
+                    dia_jueves: ['jueves'],
+                    dia_viernes: ['viernes'],
+                    dia_sabado: ['sabado', 'sábado'],
                     estado_entrega: ['entregó', 'entrego', 'papeles', 'estado']
                 }
 
@@ -63,11 +73,26 @@ export const importPapelesFromExcel = async (file) => {
                     else if (estadoRaw.includes('APLICA') && !estadoRaw.includes('NO')) estado = 'APLICA'
                     else if (estadoRaw.includes('NO APLICA')) estado = 'NO APLICA'
 
+                    const checkDay = (col) => {
+                        const val = String(row[columnMap[col]] || '').trim().toLowerCase()
+                        return val === 'x' || val === 'sí' || val === 'si' || val === 'true'
+                    }
+
                     results.push({
                         nombre_completo: nombre.toUpperCase(),
                         cedula: String(cedula),
                         correo: String(row[columnMap['correo']] || '').trim().toLowerCase(),
                         telefono: String(row[columnMap['telefono']] || '').trim(),
+                        residencia: String(row[columnMap['residencia']] || '').trim(),
+                        destino: String(row[columnMap['destino']] || '').trim(),
+                        horario: String(row[columnMap['horario']] || '').trim(),
+                        ruta: String(row[columnMap['ruta']] || '').trim(),
+                        dia_lunes: checkDay('dia_lunes'),
+                        dia_martes: checkDay('dia_martes'),
+                        dia_miercoles: checkDay('dia_miercoles'),
+                        dia_jueves: checkDay('dia_jueves'),
+                        dia_viernes: checkDay('dia_viernes'),
+                        dia_sabado: checkDay('dia_sabado'),
                         estado_entrega: estado
                     })
                 })
@@ -90,6 +115,18 @@ export const exportPapelesToExcel = async (data) => {
         { header: 'CÉDULA', key: 'cedula', width: 20 },
         { header: 'CORREO', key: 'correo', width: 30 },
         { header: 'TELÉFONO', key: 'telefono', width: 20 },
+        { header: 'RESIDENCIA', key: 'residencia', width: 25 },
+        { header: 'DESTINO', key: 'destino', width: 25 },
+        { header: 'HORARIO', key: 'horario', width: 20 },
+        { header: 'RUTA', key: 'ruta', width: 15 },
+        { header: 'LUNES', key: 'dia_lunes', width: 10 },
+        { header: 'MARTES', key: 'dia_martes', width: 10 },
+        { header: 'MIERCOLES', key: 'dia_miercoles', width: 12 },
+        { header: 'JUEVES', key: 'dia_jueves', width: 10 },
+        { header: 'VIERNES', key: 'dia_viernes', width: 10 },
+        { header: 'SABADO', key: 'dia_sabado', width: 10 },
+        { header: 'TOTAL SEMANAL', key: 'total_semanal', width: 15 },
+        { header: 'TOTAL MENSUAL', key: 'total_mensual', width: 15 },
         { header: 'ENTREGÓ PAPELES', key: 'estado', width: 25 }
     ];
 
@@ -99,12 +136,29 @@ export const exportPapelesToExcel = async (data) => {
 
         // Añadir datos
         list.forEach((item, i) => {
+            const totalSemanal = [
+                item.dia_lunes, item.dia_martes, item.dia_miercoles,
+                item.dia_jueves, item.dia_viernes, item.dia_sabado
+            ].filter(Boolean).length;
+
             sheet.addRow({
                 idx: i + 1,
                 nombre: item.nombre_completo,
                 cedula: item.cedula,
                 correo: item.correo,
                 telefono: item.telefono,
+                residencia: item.residencia || '',
+                destino: item.destino || '',
+                horario: item.horario || '',
+                ruta: item.ruta || '',
+                dia_lunes: item.dia_lunes ? 'X' : '',
+                dia_martes: item.dia_martes ? 'X' : '',
+                dia_miercoles: item.dia_miercoles ? 'X' : '',
+                dia_jueves: item.dia_jueves ? 'X' : '',
+                dia_viernes: item.dia_viernes ? 'X' : '',
+                dia_sabado: item.dia_sabado ? 'X' : '',
+                total_semanal: totalSemanal > 0 ? totalSemanal : '',
+                total_mensual: totalSemanal > 0 ? (totalSemanal * 4) : '',
                 estado: item.estado_entrega
             });
         });
@@ -156,8 +210,8 @@ export const exportPapelesToExcel = async (data) => {
                     };
                     cell.alignment = { vertical: 'middle' };
                     
-                    // Alinear al centro columnas específicas (No, Cédula, Estado)
-                    if (cell.col === 1 || cell.col === 3 || cell.col === 6) {
+                    // Alinear al centro columnas específicas (No, Cédula, Días, Totales, Estado)
+                    if (cell.col === 1 || cell.col === 3 || (cell.col >= 10 && cell.col <= 18)) {
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                     }
 

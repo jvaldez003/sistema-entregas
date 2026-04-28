@@ -9,8 +9,34 @@ CREATE TABLE IF NOT EXISTS public.entrega_papeles (
   correo              TEXT,
   telefono            TEXT,
   estado_entrega      TEXT         DEFAULT 'NO ENTREGÓ', -- Opciones: SÍ ENTREGÓ, NO ENTREGÓ, APLICA, NO APLICA
+  residencia          TEXT,
+  destino             TEXT,
+  horario             TEXT,
+  ruta                TEXT,
+  dia_lunes           BOOLEAN      DEFAULT false,
+  dia_martes          BOOLEAN      DEFAULT false,
+  dia_miercoles       BOOLEAN      DEFAULT false,
+  dia_jueves          BOOLEAN      DEFAULT false,
+  dia_viernes         BOOLEAN      DEFAULT false,
+  dia_sabado          BOOLEAN      DEFAULT false,
   created_at          TIMESTAMPTZ  DEFAULT now()
 );
+
+-- Si la tabla ya existe, ejecuta estos ALTER TABLE para agregar las nuevas columnas:
+/*
+ALTER TABLE public.entrega_papeles
+ADD COLUMN residencia TEXT,
+ADD COLUMN destino TEXT,
+ADD COLUMN horario TEXT,
+ADD COLUMN ruta TEXT,
+ADD COLUMN dia_lunes BOOLEAN DEFAULT false,
+ADD COLUMN dia_martes BOOLEAN DEFAULT false,
+ADD COLUMN dia_miercoles BOOLEAN DEFAULT false,
+ADD COLUMN dia_jueves BOOLEAN DEFAULT false,
+ADD COLUMN dia_viernes BOOLEAN DEFAULT false,
+ADD COLUMN dia_sabado BOOLEAN DEFAULT false;
+*/
+
 
 -- RLS
 ALTER TABLE public.entrega_papeles ENABLE ROW LEVEL SECURITY;

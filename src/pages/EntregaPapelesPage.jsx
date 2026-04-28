@@ -19,7 +19,17 @@ export default function EntregaPapelesPage() {
         nombre_completo: '',
         cedula: '',
         correo: '',
-        telefono: ''
+        telefono: '',
+        residencia: '',
+        destino: '',
+        horario: '',
+        ruta: '',
+        dia_lunes: false,
+        dia_martes: false,
+        dia_miercoles: false,
+        dia_jueves: false,
+        dia_viernes: false,
+        dia_sabado: false
     })
     const [submitting, setSubmitting] = useState(false)
     const [statusFilter, setStatusFilter] = useState('TODOS')
@@ -104,7 +114,12 @@ export default function EntregaPapelesPage() {
     function openAddModal() {
         setModalMode('add')
         setSelectedItem(null)
-        setFormData({ nombre_completo: '', cedula: '', correo: '', telefono: '' })
+        setFormData({ 
+            nombre_completo: '', cedula: '', correo: '', telefono: '',
+            residencia: '', destino: '', horario: '', ruta: '',
+            dia_lunes: false, dia_martes: false, dia_miercoles: false, 
+            dia_jueves: false, dia_viernes: false, dia_sabado: false
+        })
         setShowFormModal(true)
     }
 
@@ -115,7 +130,10 @@ export default function EntregaPapelesPage() {
             nombre_completo: '', // Limpiar para el nuevo
             cedula: '',
             correo: '',
-            telefono: ''
+            telefono: '',
+            residencia: '', destino: '', horario: '', ruta: '',
+            dia_lunes: false, dia_martes: false, dia_miercoles: false, 
+            dia_jueves: false, dia_viernes: false, dia_sabado: false
         })
         setShowFormModal(true)
     }
@@ -127,7 +145,17 @@ export default function EntregaPapelesPage() {
             nombre_completo: item.nombre_completo,
             cedula: item.cedula,
             correo: item.correo || '',
-            telefono: item.telefono || ''
+            telefono: item.telefono || '',
+            residencia: item.residencia || '',
+            destino: item.destino || '',
+            horario: item.horario || '',
+            ruta: item.ruta || '',
+            dia_lunes: !!item.dia_lunes,
+            dia_martes: !!item.dia_martes,
+            dia_miercoles: !!item.dia_miercoles,
+            dia_jueves: !!item.dia_jueves,
+            dia_viernes: !!item.dia_viernes,
+            dia_sabado: !!item.dia_sabado
         })
         setShowFormModal(true)
     }
@@ -259,7 +287,7 @@ export default function EntregaPapelesPage() {
                             }</h2>
                             <button className={styles.modalClose} onClick={() => setShowFormModal(false)}>✕</button>
                         </div>
-                        <form onSubmit={handleFormSubmit}>
+                        <form className={styles.modalForm} onSubmit={handleFormSubmit}>
                             <div className={styles.modalBody}>
                                 {modalMode === 'replace' && (
                                     <div className={styles.replaceNotice}>
@@ -300,6 +328,61 @@ export default function EntregaPapelesPage() {
                                         onChange={e => setFormData({...formData, telefono: e.target.value})}
                                         placeholder="Número de contacto"
                                     />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Residencia (Opcional)</label>
+                                    <input 
+                                        value={formData.residencia}
+                                        onChange={e => setFormData({...formData, residencia: e.target.value})}
+                                        placeholder="Lugar de residencia"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Destino (Opcional)</label>
+                                    <input 
+                                        value={formData.destino}
+                                        onChange={e => setFormData({...formData, destino: e.target.value})}
+                                        placeholder="Destino de viaje"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Horario (Opcional)</label>
+                                    <input 
+                                        value={formData.horario}
+                                        onChange={e => setFormData({...formData, horario: e.target.value})}
+                                        placeholder="Ej: 08:00 - 17:00"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Ruta Asignada</label>
+                                    <select 
+                                        value={formData.ruta}
+                                        onChange={e => setFormData({...formData, ruta: e.target.value})}
+                                        style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border)', width: '100%' }}
+                                    >
+                                        <option value="">Seleccione una ruta...</option>
+                                        <option value="Ruta 1">Ruta 1</option>
+                                        <option value="Ruta 2">Ruta 2</option>
+                                        <option value="Ruta 3">Ruta 3</option>
+                                        <option value="Ruta 4">Ruta 4</option>
+                                        <option value="Ruta 5">Ruta 5</option>
+                                    </select>
+                                </div>
+                                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                                    <label>Días de Viaje</label>
+                                    <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginTop: '8px' }}>
+                                        {['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'].map(dia => (
+                                            <label key={dia} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={formData[`dia_${dia}`]}
+                                                    onChange={e => setFormData({...formData, [`dia_${dia}`]: e.target.checked})}
+                                                    style={{ width: 'auto', margin: 0 }}
+                                                />
+                                                {dia.charAt(0).toUpperCase() + dia.slice(1)}
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                             <div className={styles.modalFooter}>
@@ -397,53 +480,67 @@ export default function EntregaPapelesPage() {
                                     <th style={{ width: 50 }}>No.</th>
                                     <th>Nombre Completo</th>
                                     <th>Cédula</th>
-                                    <th>Correo</th>
-                                    <th>Teléfono</th>
-                                    <th>Estado Entrega</th>
-                                    <th>Acciones</th>
+                                    <th>Correo / Tel</th>
+                                    <th>Ruta</th>
+                                    <th>Semanal</th>
+                                    <th>Mensual</th>
+                                    <th style={{ minWidth: 280 }}>Estado y Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtered.map((item, idx) => (
+                                {filtered.map((item, idx) => {
+                                    // Calcular totales
+                                    const totalSemanal = [
+                                        item.dia_lunes, item.dia_martes, item.dia_miercoles, 
+                                        item.dia_jueves, item.dia_viernes, item.dia_sabado
+                                    ].filter(Boolean).length;
+                                    const totalMensual = totalSemanal * 4;
+
+                                    return (
                                     <tr key={item.id}>
                                         <td>{idx + 1}</td>
                                         <td style={{ fontWeight: 600 }}>{item.nombre_completo}</td>
                                         <td>{item.cedula}</td>
-                                        <td style={{ color: 'var(--text3)', fontSize: 13 }}>{item.correo || '—'}</td>
-                                        <td>{item.telefono || '—'}</td>
-                                        <td>
-                                            <button 
-                                                className={`${styles.statusBadge} ${
-                                                    item.estado_entrega === 'SÍ ENTREGÓ' ? styles.statusSi :
-                                                    item.estado_entrega === 'NO ENTREGÓ' ? styles.statusNo :
-                                                    item.estado_entrega === 'APLICA' ? styles.statusAplica :
-                                                    styles.statusNoAplica
-                                                }`}
-                                                onClick={() => cycleStatus(item)}
-                                            >
-                                                {item.estado_entrega}
-                                            </button>
+                                        <td style={{ fontSize: 13, lineHeight: '1.4' }}>
+                                            <div style={{ color: 'var(--text3)' }}>{item.correo || '—'}</div>
+                                            <div>{item.telefono || '—'}</div>
                                         </td>
+                                        <td>{item.ruta || '—'}</td>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSemanal > 0 ? totalSemanal : '—'}</td>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#0284c7' }}>{totalMensual > 0 ? totalMensual : '—'}</td>
                                         <td>
-                                            <div className={styles.actionsCell}>
+                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                                 <button 
-                                                    className={styles.editBtn}
-                                                    onClick={() => openEditModal(item)}
-                                                    title="Editar información"
+                                                    className={`${styles.statusBadge} ${
+                                                        item.estado_entrega === 'SÍ ENTREGÓ' ? styles.statusSi :
+                                                        item.estado_entrega === 'NO ENTREGÓ' ? styles.statusNo :
+                                                        item.estado_entrega === 'APLICA' ? styles.statusAplica :
+                                                        styles.statusNoAplica
+                                                    }`}
+                                                    onClick={() => cycleStatus(item)}
                                                 >
-                                                    ✏️ Editar
+                                                    {item.estado_entrega}
                                                 </button>
-                                                <button 
-                                                    className={styles.replaceBtn}
-                                                    onClick={() => openReplaceModal(item)}
-                                                    title="Remplazar persona"
-                                                >
-                                                    🔄 Remplazar
-                                                </button>
+                                                <div className={styles.actionsCell} style={{ borderLeft: '1px solid var(--border)', paddingLeft: '10px' }}>
+                                                    <button 
+                                                        className={styles.editBtn}
+                                                        onClick={() => openEditModal(item)}
+                                                        title="Editar información"
+                                                    >
+                                                        ✏️ Editar
+                                                    </button>
+                                                    <button 
+                                                        className={styles.replaceBtn}
+                                                        onClick={() => openReplaceModal(item)}
+                                                        title="Remplazar persona"
+                                                    >
+                                                        🔄 Remplazar
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                         {filtered.length === 0 && (
