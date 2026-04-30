@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { importPapelesFromExcel, exportPapelesToExcel } from '../services/papelesService'
 import Select from 'react-select'
+import CreatableSelect from 'react-select/creatable'
 import styles from './EntregaPapelesPage.module.css'
 
 const ESTADOS = ['SÍ ENTREGÓ', 'NO ENTREGÓ', 'APLICA', 'NO APLICA']
@@ -109,6 +110,10 @@ export default function EntregaPapelesPage() {
     const [showFormModal, setShowFormModal] = useState(false)
     const [modalMode, setModalMode] = useState('add') // 'add' o 'replace'
     const [selectedItem, setSelectedItem] = useState(null)
+    const [optsResidencia, setOptsResidencia] = useState(opcionesResidencia)
+    const [optsDestino, setOptsDestino] = useState(opcionesDestino)
+    const [optsUniversidad, setOptsUniversidad] = useState(opcionesUniversidad)
+    const [optsRuta, setOptsRuta] = useState(opcionesRuta)
     const [formData, setFormData] = useState({
         nombre_completo: '',
         cedula: '',
@@ -423,11 +428,17 @@ export default function EntregaPapelesPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Residencia</label>
-                                    <Select 
-                                        options={opcionesResidencia}
-                                        value={opcionesResidencia.find(o => o.value === formData.residencia) || (formData.residencia ? { value: formData.residencia, label: formData.residencia } : null)}
+                                    <CreatableSelect 
+                                        options={optsResidencia}
+                                        value={optsResidencia.find(o => o.value === formData.residencia) || (formData.residencia ? { value: formData.residencia, label: formData.residencia } : null)}
                                         onChange={selected => setFormData({ ...formData, residencia: selected ? selected.value : '' })}
-                                        placeholder="Seleccione o busque..."
+                                        onCreateOption={(inputValue) => {
+                                            const newOption = { label: inputValue, value: inputValue };
+                                            setOptsResidencia(prev => [...prev, newOption]);
+                                            setFormData({ ...formData, residencia: inputValue });
+                                        }}
+                                        formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
+                                        placeholder="Seleccione, busque o escriba..."
                                         isClearable
                                         styles={selectStyles}
                                         menuPortalTarget={document.body}
@@ -435,11 +446,17 @@ export default function EntregaPapelesPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Destino</label>
-                                    <Select 
-                                        options={opcionesDestino}
-                                        value={opcionesDestino.find(o => o.value === formData.destino) || (formData.destino ? { value: formData.destino, label: formData.destino } : null)}
+                                    <CreatableSelect 
+                                        options={optsDestino}
+                                        value={optsDestino.find(o => o.value === formData.destino) || (formData.destino ? { value: formData.destino, label: formData.destino } : null)}
                                         onChange={selected => setFormData({ ...formData, destino: selected ? selected.value : '' })}
-                                        placeholder="Seleccione o busque..."
+                                        onCreateOption={(inputValue) => {
+                                            const newOption = { label: inputValue, value: inputValue };
+                                            setOptsDestino(prev => [...prev, newOption]);
+                                            setFormData({ ...formData, destino: inputValue });
+                                        }}
+                                        formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
+                                        placeholder="Seleccione, busque o escriba..."
                                         isClearable
                                         styles={selectStyles}
                                         menuPortalTarget={document.body}
@@ -447,11 +464,17 @@ export default function EntregaPapelesPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Universidad</label>
-                                    <Select 
-                                        options={opcionesUniversidad}
-                                        value={opcionesUniversidad.find(o => o.value === formData.universidad) || (formData.universidad ? { value: formData.universidad, label: formData.universidad } : null)}
+                                    <CreatableSelect 
+                                        options={optsUniversidad}
+                                        value={optsUniversidad.find(o => o.value === formData.universidad) || (formData.universidad ? { value: formData.universidad, label: formData.universidad } : null)}
                                         onChange={selected => setFormData({ ...formData, universidad: selected ? selected.value : '' })}
-                                        placeholder="Seleccione o busque..."
+                                        onCreateOption={(inputValue) => {
+                                            const newOption = { label: inputValue, value: inputValue };
+                                            setOptsUniversidad(prev => [...prev, newOption]);
+                                            setFormData({ ...formData, universidad: inputValue });
+                                        }}
+                                        formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
+                                        placeholder="Seleccione, busque o escriba..."
                                         isClearable
                                         styles={selectStyles}
                                         menuPortalTarget={document.body}
@@ -468,11 +491,17 @@ export default function EntregaPapelesPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Ruta Asignada</label>
-                                    <Select 
-                                        options={opcionesRuta}
-                                        value={opcionesRuta.find(o => o.value === formData.ruta) || (formData.ruta ? { value: formData.ruta, label: formData.ruta } : null)}
+                                    <CreatableSelect 
+                                        options={optsRuta}
+                                        value={optsRuta.find(o => o.value === formData.ruta) || (formData.ruta ? { value: formData.ruta, label: formData.ruta } : null)}
                                         onChange={selected => setFormData({ ...formData, ruta: selected ? selected.value : '' })}
-                                        placeholder="Seleccione o busque..."
+                                        onCreateOption={(inputValue) => {
+                                            const newOption = { label: inputValue, value: inputValue };
+                                            setOptsRuta(prev => [...prev, newOption]);
+                                            setFormData({ ...formData, ruta: inputValue });
+                                        }}
+                                        formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
+                                        placeholder="Seleccione, busque o escriba..."
                                         isClearable
                                         styles={selectStyles}
                                         menuPortalTarget={document.body}
