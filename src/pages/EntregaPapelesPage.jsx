@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { importPapelesFromExcel, exportPapelesToExcel } from '../services/papelesService'
-import Select from 'react-select'
+import Select, { components } from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 import styles from './EntregaPapelesPage.module.css'
 
@@ -98,6 +98,45 @@ const selectStyles = {
         cursor: 'pointer'
     }),
     menuPortal: base => ({ ...base, zIndex: 9999 })
+};
+
+const CustomOption = (props) => {
+    const { selectProps, data } = props;
+    const { onEditOption, onDeleteOption } = selectProps;
+
+    return (
+        <components.Option {...props}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span>{data.label}</span>
+                {data.__isNew__ ? null : (
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button 
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if(onEditOption) onEditOption(data);
+                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', padding: 0 }}
+                            title="Editar"
+                        >
+                            ✏️
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if(onDeleteOption) onDeleteOption(data);
+                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', padding: 0 }}
+                            title="Eliminar"
+                        >
+                            🗑️
+                        </button>
+                    </div>
+                )}
+            </div>
+        </components.Option>
+    );
 };
 
 export default function EntregaPapelesPage() {
@@ -205,6 +244,34 @@ export default function EntregaPapelesPage() {
         const { error } = await supabase.from('entrega_papeles').delete().neq('id', '00000000-0000-0000-0000-000000000000')
         if (error) alert('Error: ' + error.message)
         else loadData()
+    }
+
+    const handleEditOption = (type, option) => {
+        const newLabel = window.prompt(`Editar opción:`, option.label);
+        if (newLabel && newLabel.trim() !== '') {
+            const updatedOption = { ...option, label: newLabel.trim(), value: newLabel.trim() };
+            if (type === 'residencia') setOptsResidencia(prev => prev.map(o => o.value === option.value ? updatedOption : o));
+            if (type === 'destino') setOptsDestino(prev => prev.map(o => o.value === option.value ? updatedOption : o));
+            if (type === 'universidad') setOptsUniversidad(prev => prev.map(o => o.value === option.value ? updatedOption : o));
+            if (type === 'ruta') setOptsRuta(prev => prev.map(o => o.value === option.value ? updatedOption : o));
+            
+            if (formData[type] === option.value) {
+                setFormData(prev => ({ ...prev, [type]: updatedOption.value }));
+            }
+        }
+    }
+
+    const handleDeleteOption = (type, option) => {
+        if (window.confirm(`¿Seguro que deseas eliminar "${option.label}"?`)) {
+            if (type === 'residencia') setOptsResidencia(prev => prev.filter(o => o.value !== option.value));
+            if (type === 'destino') setOptsDestino(prev => prev.filter(o => o.value !== option.value));
+            if (type === 'universidad') setOptsUniversidad(prev => prev.filter(o => o.value !== option.value));
+            if (type === 'ruta') setOptsRuta(prev => prev.filter(o => o.value !== option.value));
+            
+            if (formData[type] === option.value) {
+                setFormData(prev => ({ ...prev, [type]: '' }));
+            }
+        }
     }
 
     function openAddModal() {
@@ -338,7 +405,7 @@ export default function EntregaPapelesPage() {
                         </div>
                         <div className={styles.modalBody}>
                             <p style={{ marginBottom: 20, color: 'var(--text2)' }}>
-                                Se generará un archivo Excel con 3 hojas organizadas. Resumen de datos actuales:
+                                Se generará un archivo Excel con 4 hojas organizadas. Resumen de datos actuales:
                             </p>
                             <div className={styles.previewStats}>
                                 <div className={`${styles.statItem} ${styles.statBlue}`}>
@@ -437,6 +504,9 @@ export default function EntregaPapelesPage() {
                                             setOptsResidencia(prev => [...prev, newOption]);
                                             setFormData({ ...formData, residencia: inputValue });
                                         }}
+                                        components={{ Option: CustomOption }}
+                                        onEditOption={(opt) => handleEditOption('residencia', opt)}
+                                        onDeleteOption={(opt) => handleDeleteOption('residencia', opt)}
                                         formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
                                         placeholder="Seleccione, busque o escriba..."
                                         isClearable
@@ -455,6 +525,9 @@ export default function EntregaPapelesPage() {
                                             setOptsDestino(prev => [...prev, newOption]);
                                             setFormData({ ...formData, destino: inputValue });
                                         }}
+                                        components={{ Option: CustomOption }}
+                                        onEditOption={(opt) => handleEditOption('destino', opt)}
+                                        onDeleteOption={(opt) => handleDeleteOption('destino', opt)}
                                         formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
                                         placeholder="Seleccione, busque o escriba..."
                                         isClearable
@@ -473,6 +546,9 @@ export default function EntregaPapelesPage() {
                                             setOptsUniversidad(prev => [...prev, newOption]);
                                             setFormData({ ...formData, universidad: inputValue });
                                         }}
+                                        components={{ Option: CustomOption }}
+                                        onEditOption={(opt) => handleEditOption('universidad', opt)}
+                                        onDeleteOption={(opt) => handleDeleteOption('universidad', opt)}
                                         formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
                                         placeholder="Seleccione, busque o escriba..."
                                         isClearable
@@ -500,6 +576,9 @@ export default function EntregaPapelesPage() {
                                             setOptsRuta(prev => [...prev, newOption]);
                                             setFormData({ ...formData, ruta: inputValue });
                                         }}
+                                        components={{ Option: CustomOption }}
+                                        onEditOption={(opt) => handleEditOption('ruta', opt)}
+                                        onDeleteOption={(opt) => handleDeleteOption('ruta', opt)}
                                         formatCreateLabel={(inputValue) => `Crear "${inputValue}"`}
                                         placeholder="Seleccione, busque o escriba..."
                                         isClearable

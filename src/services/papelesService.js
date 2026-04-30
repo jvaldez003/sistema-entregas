@@ -120,8 +120,8 @@ export const exportPapelesToExcel = async (data) => {
         { header: 'RESIDENCIA', key: 'residencia', width: 25 },
         { header: 'DESTINO', key: 'destino', width: 25 },
         { header: 'UNIVERSIDAD', key: 'universidad', width: 25 },
-        { header: 'HORARIO', key: 'horario', width: 20 },
-        { header: 'RUTA', key: 'ruta', width: 15 },
+        // { header: 'HORARIO', key: 'horario', width: 20 },
+        // { header: 'RUTA', key: 'ruta', width: 15 },
         { header: 'LUNES', key: 'dia_lunes', width: 10 },
         { header: 'MARTES', key: 'dia_martes', width: 10 },
         { header: 'MIERCOLES', key: 'dia_miercoles', width: 12 },
@@ -133,9 +133,14 @@ export const exportPapelesToExcel = async (data) => {
         { header: 'ENTREGÓ PAPELES', key: 'estado', width: 25 }
     ];
 
-    const addSheet = (name, list, colorHex) => {
+    const addSheet = (name, list, colorHex, options = { includeEstado: true }) => {
         const sheet = workbook.addWorksheet(name);
-        sheet.columns = columns;
+        
+        let currentColumns = columns;
+        if (!options.includeEstado) {
+            currentColumns = columns.filter(col => col.key !== 'estado');
+        }
+        sheet.columns = currentColumns;
 
         // Añadir datos
         list.forEach((item, i) => {
@@ -144,7 +149,7 @@ export const exportPapelesToExcel = async (data) => {
                 item.dia_jueves, item.dia_viernes, item.dia_sabado
             ].filter(Boolean).length;
 
-            sheet.addRow({
+            const rowData = {
                 idx: i + 1,
                 nombre: item.nombre_completo,
                 cedula: item.cedula,
@@ -162,9 +167,14 @@ export const exportPapelesToExcel = async (data) => {
                 dia_viernes: item.dia_viernes ? 'X' : '',
                 dia_sabado: item.dia_sabado ? 'X' : '',
                 total_semanal: totalSemanal > 0 ? totalSemanal : '',
-                total_mensual: totalSemanal > 0 ? (totalSemanal * 4) : '',
-                estado: item.estado_entrega
-            });
+                total_mensual: totalSemanal > 0 ? (totalSemanal * 4) : ''
+            };
+
+            if (options.includeEstado) {
+                rowData.estado = item.estado_entrega;
+            }
+
+            sheet.addRow(rowData);
         });
 
         // Estilo del Header
@@ -192,20 +202,21 @@ export const exportPapelesToExcel = async (data) => {
         // Estilo de las filas de datos
         sheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) {
-                const estado = row.getCell('estado').value;
-                
                 let rowBgColor = null;
                 let textColor = 'FF000000';
 
-                if (estado === 'SÍ ENTREGÓ') {
-                    rowBgColor = 'FFC6EFCE'; // Verde claro (Estilo Excel "Bueno")
-                    textColor = 'FF006100';  // Texto verde oscuro
-                } else if (estado === 'NO ENTREGÓ') {
-                    rowBgColor = 'FFFFC7CE'; // Rojo claro (Estilo Excel "Malo")
-                    textColor = 'FF9C0006';  // Texto rojo oscuro
+                if (options.includeEstado) {
+                    const estado = row.getCell('estado').value;
+                    if (estado === 'SÍ ENTREGÓ') {
+                        rowBgColor = 'FFC6EFCE'; // Verde claro (Estilo Excel "Bueno")
+                        textColor = 'FF006100';  // Texto verde oscuro
+                    } else if (estado === 'NO ENTREGÓ') {
+                        rowBgColor = 'FFFFC7CE'; // Rojo claro (Estilo Excel "Malo")
+                        textColor = 'FF9C0006';  // Texto rojo oscuro
+                    }
                 }
 
-                row.eachCell((cell) => {
+                row.eachCell((cell, colNumber) => {
                     cell.border = {
                         top: { style: 'thin' },
                         left: { style: 'thin' },
@@ -214,8 +225,8 @@ export const exportPapelesToExcel = async (data) => {
                     };
                     cell.alignment = { vertical: 'middle' };
                     
-                    // Alinear al centro columnas específicas (No, Cédula, Días, Totales, Estado)
-                    if (cell.col === 1 || cell.col === 3 || (cell.col >= 10 && cell.col <= 18)) {
+                    const colKey = currentColumns[colNumber - 1]?.key || '';
+                    if (colKey === 'idx' || colKey === 'cedula' || colKey.startsWith('dia_') || colKey.startsWith('total_') || colKey === 'estado') {
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                     }
 
@@ -246,9 +257,20 @@ export const exportPapelesToExcel = async (data) => {
             });
             column.width = maxColumnLength < 10 ? 10 : maxColumnLength + 5;
         });
+
+        // Encontrar la columna 'universidad' para aplicar el filtro hasta ahí
+        const lastFilterColIndex = currentColumns.findIndex(col => col.key === 'universidad') + 1;
+        const finalFilterCol = lastFilterColIndex > 0 ? lastFilterColIndex : currentColumns.length;
+
+        // Agregar filtro automático a las columnas de información principal (excluyendo días y totales)
+        sheet.autoFilter = {
+            from: { row: 1, column: 1 },
+            to: { row: list.length === 0 ? 1 : list.length + 1, column: finalFilterCol }
+        };
     };
 
-    // Crear las 3 hojas con colores corporativos
+    // Crear las 4 hojas con colores corporativos
+    addSheet('PROVEEDOR TICKETS', data, 'FFD97706', { includeEstado: false }); // Naranja
     addSheet('GENERAL - TODOS', data, 'FF2B6CB0'); // Azul
     addSheet('ENTREGARON PAPELES', data.filter(d => d.estado_entrega === 'SÍ ENTREGÓ'), 'FF2F855A'); // Verde
     addSheet('NO ENTREGARON PAPELES', data.filter(d => d.estado_entrega === 'NO ENTREGÓ'), 'FFC53030'); // Rojo
