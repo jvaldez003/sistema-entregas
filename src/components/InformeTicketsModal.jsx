@@ -60,36 +60,31 @@ function festivosColombia(year) {
     const add = (d) => f.add(toStr(d.getFullYear(), d.getMonth()+1, d.getDate()))
     const nm  = (d) => nextMonday(d)
 
-    // Fijos
-    add(new Date(year,  0,  1))   // Año Nuevo
-    add(new Date(year,  4,  1))   // Día del Trabajo
-    add(new Date(year,  6, 20))   // Independencia
-    add(new Date(year,  7,  7))   // Batalla de Boyacá
-    add(new Date(year, 11,  8))   // Inmaculada Concepción
-    add(new Date(year, 11, 25))   // Navidad
+    add(new Date(year,  0,  1))
+    add(new Date(year,  4,  1))
+    add(new Date(year,  6, 20))
+    add(new Date(year,  7,  7))
+    add(new Date(year, 11,  8))
+    add(new Date(year, 11, 25))
 
-    // Trasladables al lunes siguiente
-    add(nm(new Date(year,  0,  6)))  // Reyes Magos
-    add(nm(new Date(year,  2, 19)))  // San José
-    add(nm(new Date(year,  5, 29)))  // San Pedro y San Pablo
-    add(nm(new Date(year,  7, 15)))  // Asunción
-    add(nm(new Date(year,  9, 12)))  // Día de la Raza
-    add(nm(new Date(year, 10,  1)))  // Todos los Santos
-    add(nm(new Date(year, 10, 11)))  // Independencia de Cartagena
+    add(nm(new Date(year,  0,  6)))
+    add(nm(new Date(year,  2, 19)))
+    add(nm(new Date(year,  5, 29)))
+    add(nm(new Date(year,  7, 15)))
+    add(nm(new Date(year,  9, 12)))
+    add(nm(new Date(year, 10,  1)))
+    add(nm(new Date(year, 10, 11)))
 
-    // Semana Santa y móviles basados en Pascua
     const pascua = easterDate(year)
-    add(offsetDays(pascua, -3))           // Jueves Santo
-    add(offsetDays(pascua, -2))           // Viernes Santo
-    add(nm(offsetDays(pascua,  39)))      // Ascensión del Señor
-    add(nm(offsetDays(pascua,  60)))      // Corpus Christi
-    add(nm(offsetDays(pascua,  68)))      // Sagrado Corazón de Jesús
+    add(offsetDays(pascua, -3))
+    add(offsetDays(pascua, -2))
+    add(nm(offsetDays(pascua,  39)))
+    add(nm(offsetDays(pascua,  60)))
+    add(nm(offsetDays(pascua,  68)))
 
     return f
 }
 
-// ── Cálculo de tickets ───────────────────────────────────────────
-// 1 ticket = 1 día de viaje activo en el mes, excluyendo festivos.
 function calcTickets(item, mes) {
     if (!mes) return 0
     const [y, m] = mes.split('-').map(Number)
@@ -105,6 +100,39 @@ function calcTickets(item, mes) {
     }
     return viajes
 }
+
+// ── CSS responsive inyectado en el modal ─────────────────────────
+const MODAL_CSS = `
+  .im-toolbar {
+    display: flex; gap: 8px; padding: 10px 16px;
+    background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto; scrollbar-width: none;
+    align-items: center; flex-shrink: 0;
+  }
+  .im-toolbar::-webkit-scrollbar { display: none; }
+  .im-toolbar > * { flex-shrink: 0; }
+  .im-body { overflow-y: auto; flex: 1; padding: 20px 24px; }
+  .im-stats { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .im-stat-card {
+    flex: 1; min-width: 120px; padding: 14px 12px;
+    border-radius: 12px; text-align: center;
+  }
+  .im-charts {
+    display: grid; grid-template-columns: 1fr 1.8fr;
+    gap: 16px; margin-bottom: 20px;
+  }
+  .im-hdr-title { font-size: 17px; font-weight: 800; margin: 2px 0; }
+  .im-hdr-sub   { font-size: 11px; opacity: 0.85; margin: 0; }
+  .im-hdr-meta  { font-size: 10px; opacity: 0.75; margin: 0; letter-spacing: 0.04em; text-transform: uppercase; }
+  @media (max-width: 640px) {
+    .im-body { padding: 12px 10px; }
+    .im-stat-card { min-width: calc(50% - 6px) !important; }
+    .im-charts { grid-template-columns: 1fr !important; }
+    .im-hdr-title { font-size: 14px; }
+    .im-hdr-sub   { font-size: 10px; }
+    .im-toolbar { gap: 6px; padding: 8px 10px; }
+  }
+`
 
 const TooltipPie = ({ active, payload, total }) => {
     if (!active || !payload?.length) return null
@@ -128,11 +156,20 @@ const TooltipBar = ({ active, payload, label }) => {
     )
 }
 
+// Fuente dinámica según longitud del valor (para COP largos)
+function statFontSize(value) {
+    const s = String(value ?? '—')
+    if (s.length > 14) return '12px'
+    if (s.length > 10) return '15px'
+    if (s.length > 6)  return '20px'
+    return '26px'
+}
+
 const StatCard = ({ label, value, color, sub }) => (
-    <div style={{ flex: 1, minWidth: '110px', padding: '14px 16px', borderRadius: '12px', background: color + '18', border: `1.5px solid ${color}35`, textAlign: 'center' }}>
-        <div style={{ fontSize: '26px', fontWeight: '800', color }}>{value}</div>
+    <div className="im-stat-card" style={{ background: color + '18', border: `1.5px solid ${color}35` }}>
+        <div style={{ fontSize: statFontSize(value), fontWeight: '800', color, lineHeight: 1.2, wordBreak: 'break-word' }}>{value}</div>
         <div style={{ fontSize: '11px', fontWeight: '600', color: '#475569', marginTop: '4px' }}>{label}</div>
-        {sub && <div style={{ fontSize: '10px', color, marginTop: '2px' }}>{sub}</div>}
+        {sub && <div style={{ fontSize: '10px', color, marginTop: '2px', wordBreak: 'break-word' }}>{sub}</div>}
     </div>
 )
 
@@ -215,7 +252,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
     const [exportandoCompleto, setExportandoCompleto] = useState(false)
     const [dataHistorica, setDataHistorica]           = useState([])
     const [cargandoSnap, setCargandoSnap]             = useState(false)
-    // mesVista controla TODO en el modal: stats, gráficas, tabla y PDF "mes"
     const [mesVista, setMesVista]                     = useState(mesAnio)
 
     useEffect(() => { cargarHistorico() }, [mesAnio])
@@ -249,25 +285,19 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
     const toggleMes      = (mes)    => setMesesSeleccionados(prev => { const n = new Set(prev); n.has(mes) ? n.delete(mes) : n.add(mes); return n })
     const toggleRegistro = (cedula) => setRegistrosExcluidos(prev  => { const n = new Set(prev); n.has(cedula) ? n.delete(cedula) : n.add(cedula); return n })
 
-    // ── Revisado del mes actual (solo para mostrar alertas del mes real) ──
     const revisadoMesActual = Object.keys(ticketData).length > 0
     const totalExcluidos    = registrosExcluidos.size
 
-    // Datos del mes visto: snapshot histórico cuando existe, datos live para el mes actual
     const dataActiva = mesVista === mesAnio
         ? data
         : (dataHistorica.length > 0 ? dataHistorica : data)
 
-    // ── Listas base: completas para la tabla de selección ─────────
-    // Siempre usan ticketData del mes actual para los controles de la tabla
     const noRecogieronListActual = data.filter(d => ticketData[d.cedula] === false)
     const siRecogieronListActual = data.filter(d => ticketData[d.cedula] !== false)
 
-    // ── Incluidos (excluidos descartados de TODO) ─────────────────
     const listaIncluida = dataActiva.filter(d => !registrosExcluidos.has(d.cedula))
     const total         = listaIncluida.length
 
-    // ── ticketData del mes VISTO (puede ser histórico) ────────────
     const tdVista = mesVista === mesAnio
         ? ticketData
         : Object.fromEntries(
@@ -283,25 +313,20 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
     const siCountVista      = revisadoVista ? siRecogieronVista.length : 0
     const pctVista          = revisadoVista && total > 0 ? Math.round(siCountVista / total * 100) : 0
 
-    // Tickets del mes VISTO (1 ticket = 1 día de viaje activo, sin festivos)
     const ticketsNoRecVista = noRecogieronVista.reduce((s, item) => s + calcTickets(item, mesVista), 0)
     const ticketsTotalVista = listaIncluida.reduce((s, item) => s + calcTickets(item, mesVista), 0)
 
-    // Valor del ticket por registro (ida + regreso, ya guardados en el registro)
     const parsePrecio = (v) => {
         if (!v) return 0
-        // Formato colombiano: "3.500" → 3500, "4600" → 4600
         const s = String(v).trim().replace(/\./g, '').replace(',', '.')
         return Math.round(Number(s)) || 0
     }
     const getPrecioItem = (item) => parsePrecio(item.valor_ida) + parsePrecio(item.valor_regreso)
     const hayPrecios    = dataActiva.some(item => item.valor_ida || item.valor_regreso)
 
-    // Valores en COP (cada item usa valor_ida + valor_regreso del propio registro)
     const valorTotalVista = listaIncluida.reduce((s, item) => s + calcTickets(item, mesVista) * getPrecioItem(item), 0)
     const valorNoRecVista = noRecogieronVista.reduce((s, item) => s + calcTickets(item, mesVista) * getPrecioItem(item), 0)
 
-    // ── Histórico derivado (rawHistorico + exclusiones) ────────────
     const _byMes = {}
     rawHistorico.forEach(r => {
         if (registrosExcluidos.has(r.cedula)) return
@@ -320,14 +345,11 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
 
     const historicoFiltrado = historico.filter(h => mesesSeleccionados.has(h.mes))
 
-    // Meses disponibles en el selector (actual + todos con registros)
     const mesesDisponibles = [
         { mes: mesAnio, label: getMesLabel(mesAnio) + ' (actual)' },
         ...historico.filter(h => h.mes !== mesAnio).map(h => ({ mes: h.mes, label: h.label }))
     ]
 
-    // ── Tabla del modal: TODOS para poder marcar inclusión ─────────
-    // Filtros de tab usan el mes VISTO para que la vista sea coherente
     const noRecogieronListVista = dataActiva.filter(d => tdVista[d.cedula] === false)
     const siRecogieronListVista = dataActiva.filter(d => tdVista[d.cedula] !== false)
 
@@ -342,7 +364,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
             d.cedula.includes(busqueda))
         : datosTablaBase
 
-    // Gráficas del mes VISTO
     const pieData = [
         { name: 'Sí recogieron', value: siCountVista, color: C.si },
         { name: 'No recogieron', value: noRecogieronVista.length, color: C.no },
@@ -397,9 +418,9 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
                 ],
                 [
                     'Valor total tickets (COP)',
-                    { content: valorTot, styles: { fontStyle:'bold', fontSize:10, textColor: precioTicket>0?[13,148,136]:[100,100,100] } },
+                    { content: valorTot, styles: { fontStyle:'bold', fontSize:10, textColor: hayPrecios && valTot>0?[13,148,136]:[100,100,100] } },
                     'Valor no recogidos (COP)',
-                    { content: valorNoR, styles: { fontStyle:'bold', fontSize:10, textColor: precioTicket>0&&rev&&tksNoR>0?[185,28,28]:[100,100,100] } }
+                    { content: valorNoR, styles: { fontStyle:'bold', fontSize:10, textColor: hayPrecios&&rev&&tksNoR>0?[185,28,28]:[100,100,100] } }
                 ],
             ],
             headStyles: { fillColor:[...VERDE], textColor:[255,255,255], fontSize:8, fontStyle:'bold', halign:'center' },
@@ -481,7 +502,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
     function buildUniversidades(doc, y, td, rev) {
         if (!rev || univData.length === 0) return y
         if (y > 220) { doc.addPage(); y = 14 }
-        // Recalcular con td del mes visto
         const byU = {}
         listaIncluida.forEach(item => {
             const key = (item.universidad || 'Sin especificar').split(' - ')[0].trim().slice(0, 24)
@@ -538,7 +558,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
         return doc.lastAutoTable.finalY + 12
     }
 
-    // ── Reporte de gastos: datos por persona para el mes visto ───
     function buildFilasReporte() {
         return listaIncluida
             .map(item => {
@@ -559,7 +578,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
         const wb   = new ExcelJS.Workbook()
         const ws   = wb.addWorksheet(`Gastos ${mesLabel}`)
 
-        // Logo
         try {
             const blob = await fetch('/logo_candelaria.png').then(r => r.blob())
             const b64  = await new Promise(res => { const rd = new FileReader(); rd.onload = () => res(rd.result); rd.readAsDataURL(blob) })
@@ -567,7 +585,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
             ws.addImage(imgId, { tl:{ col:0, row:0 }, ext:{ width:60, height:70 } })
         } catch {}
 
-        // Cabecera
         ws.mergeCells('B1:H1'); ws.getCell('B1').value = 'ALCALDÍA MUNICIPAL DE CANDELARIA — VALLE DEL CAUCA'
         ws.getCell('B1').font = { bold:true, size:14 }; ws.getCell('B1').alignment = { horizontal:'center', vertical:'middle' }
         ws.mergeCells('B2:H2'); ws.getCell('B2').value = 'REPORTE DE GASTOS EN TICKETS TRANSPORTE UNIVERSITARIO'
@@ -576,8 +593,7 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
         ws.getCell('B3').font = { size:10 }; ws.getCell('B3').alignment = { horizontal:'center', vertical:'middle' }
         ws.getRow(1).height = 24; ws.getRow(2).height = 20; ws.getRow(3).height = 16
 
-        ws.addRow([]) // fila vacía 4
-        // Encabezados tabla
+        ws.addRow([])
         const hdr = ws.addRow(['N°','Nombre Completo','Cédula','Destino / Ruta','Días/sem','Valor diario (ida+vuelta)','Tickets del mes','Total COP'])
         hdr.font = { bold:true, color:{ argb:'FFFFFFFF' } }
         hdr.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF145322' } }
@@ -620,7 +636,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
             })
         })
 
-        // Fila total
         const totRow = ws.addRow(['','','','','TOTAL GENERAL','',`${filas.reduce((s,r)=>s+r.tickets,0)} tickets`,totalCOP])
         totRow.height = 22
         totRow.font  = { bold:true, size:11 }
@@ -687,7 +702,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
         doc.save(`REPORTE_GASTOS_TICKETS_${mesVista}.pdf`)
     }
 
-    // ── Exportar PDF del mes visto ────────────────────────────────
     const exportarPDF = async () => {
         const doc        = new jsPDF('p','mm','a4')
         const logoBase64 = await cargarLogoBase64()
@@ -726,7 +740,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
         doc.save(`INFORME_TICKETS_CANDELARIA_${mesVista}.pdf`)
     }
 
-    // ── Exportar PDF completo (todos los meses históricos) ────────
     const exportarPDFCompleto = async () => {
         setExportandoCompleto(true)
         try {
@@ -740,7 +753,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
                 return
             }
 
-            // Agrupar por mes, respetando exclusiones
             const byMonth = {}
             allRecords.forEach(r => {
                 if (registrosExcluidos.has(r.cedula)) return
@@ -760,7 +772,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
             const doc        = new jsPDF('p','mm','a4')
             const logoBase64 = await cargarLogoBase64()
 
-            // Calcular promedio de asistencia y tickets acumulados
             let totalTicketsAcum = 0
             const promedioAsi = Math.round(
                 meses.reduce((acc, m) => {
@@ -785,7 +796,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
                 `Total períodos: ${meses.length}   ·   Promedio asistencia: ${promedioAsi}%   ·   Tickets sin recoger (acum.): ${totalTicketsAcum}${valorAcumStr}`
             )
 
-            // ── Tabla resumen de todos los meses ──
             y = agregarTituloSeccion(doc, y, 'RESUMEN POR MES', [...VERDE])
             autoTable(doc, {
                 startY: y,
@@ -824,7 +834,6 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
             })
             y = doc.lastAutoTable.finalY + 16
 
-            // ── Detalle mes a mes ──
             meses.forEach(mes => {
                 const noPersonas = Array.from(byMonth[mes].noCedulas)
                     .filter(c => !registrosExcluidos.has(c))
@@ -902,334 +911,373 @@ export default function InformeTicketsModal({ data, ticketData, mesAnio, fechaDi
         return { txt:'— Sin dato', bg:'#f1f5f9', color:'#64748b' }
     }
 
-    return (
-        <div
-            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(5px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100 }}
-            onClick={onClose}
+    // ── Botón de acción toolbar ──────────────────────────────────
+    const BtnAccion = ({ onClick, bg, children, disabled }) => (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            style={{
+                padding:'7px 13px', background: disabled ? '#9ca3af' : bg,
+                border:'none', borderRadius:'8px', color:'white',
+                cursor: disabled ? 'wait' : 'pointer',
+                fontWeight:'700', fontSize:'12px', whiteSpace:'nowrap',
+                display:'flex', alignItems:'center', gap:'5px',
+            }}
         >
+            {children}
+        </button>
+    )
+
+    return (
+        <>
+            <style>{MODAL_CSS}</style>
             <div
-                style={{ background:'white', borderRadius:'16px', width:'98%', maxWidth:'980px', maxHeight:'95vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 30px 60px rgba(0,0,0,0.35)' }}
-                onClick={e => e.stopPropagation()}
+                style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(5px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100 }}
+                onClick={onClose}
             >
-                {/* ── Header ── */}
-                <div style={{ display:'flex', flexShrink:0 }}>
-                    <div style={{ background:'white', padding:'10px 14px', display:'flex', alignItems:'center', justifyContent:'center', borderRight:'3px solid #ca8a04', minWidth:'84px' }}>
-                        <img src="/logo_candelaria.png" alt="Candelaria" style={{ height:'62px', objectFit:'contain' }} onError={e=>{e.target.style.display='none'}} />
-                    </div>
-                    <div style={{ flex:1, background:'linear-gradient(135deg,#14532d,#15803d)', padding:'14px 20px', color:'white', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                        <div>
-                            <p style={{ margin:0, fontSize:'10px', opacity:0.75, letterSpacing:'0.05em', textTransform:'uppercase' }}>
-                                Alcaldía Municipal de Candelaria · Valle del Cauca
-                            </p>
-                            <h2 style={{ margin:'3px 0', fontSize:'16px', fontWeight:'800' }}>
-                                📊 Informe de Distribución de Tickets
-                            </h2>
-                            <p style={{ margin:0, fontSize:'11px', opacity:0.85 }}>
-                                Viendo: <strong>{getMesLabel(mesVista)}</strong>
-                                {mesVista !== mesAnio && <span style={{ marginLeft:'6px', background:'rgba(202,138,4,0.35)', padding:'1px 7px', borderRadius:'99px', fontSize:'10px' }}>histórico</span>}
-                                {mesVista === mesAnio && !revisadoMesActual && <span style={{ marginLeft:'8px', background:'rgba(251,191,36,0.3)', padding:'1px 8px', borderRadius:'99px', fontSize:'10px', color:'#fef9c3' }}>⏳ Sin revisión</span>}
-                                {totalExcluidos > 0 && <span style={{ marginLeft:'8px', background:'rgba(255,255,255,0.2)', padding:'1px 8px', borderRadius:'99px', fontSize:'10px' }}>{totalExcluidos} excluido{totalExcluidos>1?'s':''}</span>}
-                            </p>
+                <div
+                    style={{ background:'white', borderRadius:'16px', width:'98%', maxWidth:'980px', maxHeight:'95vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 30px 60px rgba(0,0,0,0.35)' }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* ── Header: logo + título + cierre ── */}
+                    <div style={{ display:'flex', flexShrink:0 }}>
+                        {/* Logo */}
+                        <div style={{ background:'white', padding:'10px 12px', display:'flex', alignItems:'center', justifyContent:'center', borderRight:'3px solid #ca8a04', minWidth:'72px' }}>
+                            <img src="/logo_candelaria.png" alt="Candelaria" style={{ height:'54px', objectFit:'contain' }} onError={e=>{e.target.style.display='none'}} />
                         </div>
-                        <div style={{ display:'flex', gap:'8px', alignItems:'center', flexShrink:0, marginLeft:'12px', flexWrap:'wrap', justifyContent:'flex-end' }}>
-                            <select
-                                value={mesVista}
-                                onChange={e => setMesVista(e.target.value)}
-                                style={{ padding:'6px 10px', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.15)', color:'white', fontSize:'11px', fontWeight:'600', cursor:'pointer', outline:'none' }}
-                            >
-                                {mesesDisponibles.map(({ mes, label }) => (
-                                    <option key={mes} value={mes} style={{ background:'#14532d', color:'white' }}>{label}</option>
-                                ))}
-                            </select>
-                            <button onClick={exportarPDF} style={{ padding:'7px 14px', background:'#ca8a04', border:'none', borderRadius:'8px', color:'white', cursor:'pointer', fontWeight:'700', fontSize:'12px', whiteSpace:'nowrap' }}>
-                                📄 Informe mes
-                            </button>
-                            <button onClick={exportarPDFCompleto} disabled={exportandoCompleto} style={{ padding:'7px 14px', background:exportandoCompleto?'#6b7280':'#7c3aed', border:'none', borderRadius:'8px', color:'white', cursor:exportandoCompleto?'wait':'pointer', fontWeight:'700', fontSize:'12px', whiteSpace:'nowrap' }}>
-                                {exportandoCompleto ? '⏳ Generando...' : '📋 Completo'}
-                            </button>
-                            <button onClick={exportarReporteExcel} style={{ padding:'7px 14px', background:'#15803d', border:'none', borderRadius:'8px', color:'white', cursor:'pointer', fontWeight:'700', fontSize:'12px', whiteSpace:'nowrap' }}>
-                                💰 Gastos Excel
-                            </button>
-                            <button onClick={exportarReporteGastosPDF} style={{ padding:'7px 14px', background:'#0f766e', border:'none', borderRadius:'8px', color:'white', cursor:'pointer', fontWeight:'700', fontSize:'12px', whiteSpace:'nowrap' }}>
-                                💰 Gastos PDF
-                            </button>
-                            <button onClick={onClose} style={{ background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:'8px', color:'white', cursor:'pointer', fontSize:'18px', padding:'5px 11px', lineHeight:1 }}>✕</button>
-                        </div>
-                    </div>
-                </div>
-                <div style={{ height:'3px', background:'linear-gradient(90deg,#ca8a04,#fde68a,#ca8a04)', flexShrink:0 }} />
 
-                {/* ── Body ── */}
-                <div style={{ overflowY:'auto', flex:1, padding:'20px 24px' }}>
-
-                    {cargandoSnap && (
-                        <div style={{ marginBottom:'12px', padding:'10px 16px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'10px', color:'#1e40af', fontSize:'12px', fontWeight:'600' }}>
-                            ⏳ Cargando datos históricos de {getMesLabel(mesVista)}...
-                        </div>
-                    )}
-                    {mesVista !== mesAnio && !cargandoSnap && dataHistorica.length === 0 && (
-                        <div style={{ marginBottom:'12px', padding:'10px 16px', background:'#fefce8', border:'1px solid #fde68a', borderRadius:'10px', color:'#854d0e', fontSize:'12px', fontWeight:'600' }}>
-                            ⚠️ No hay snapshot guardado para {getMesLabel(mesVista)} — se muestran los datos actuales. El snapshot se guarda automáticamente al entrar al mes siguiente.
-                        </div>
-                    )}
-                    {!revisadoVista && (
-                        <div style={{ marginBottom:'16px', padding:'12px 16px', background:'#fffbeb', border:'1px solid #fde68a', borderRadius:'10px', color:'#92400e', fontSize:'13px', fontWeight:'600', display:'flex', gap:'8px' }}>
-                            ⏳ Sin datos de revisión para <strong>{getMesLabel(mesVista)}</strong>
-                            {mesVista === mesAnio && ' — ve a la tabla principal y marca quiénes no recogieron.'}
-                        </div>
-                    )}
-
-                    {/* Stat Cards del mes visto */}
-                    <div style={{ display:'flex', gap:'10px', marginBottom:'20px', flexWrap:'wrap' }}>
-                        <StatCard label="Total Beneficiarios" value={total} color={C.azul} sub={totalExcluidos>0?`${totalExcluidos} excluido${totalExcluidos!==1?'s':''}`:undefined} />
-                        <StatCard label="Sí Recogieron" value={revisadoVista?siCountVista:'—'} color={C.si} sub={revisadoVista?`${pctVista}% del total`:'Sin datos'} />
-                        <StatCard label="No Recogieron" value={revisadoVista?noRecogieronVista.length:'—'} color={C.no} sub={revisadoVista?`${100-pctVista}% del total`:'Sin datos'} />
-                        <StatCard label="% Asistencia" value={revisadoVista?`${pctVista}%`:'—'} color={!revisadoVista?C.naranja:pctVista>=85?C.si:pctVista>=60?C.naranja:C.no} sub={!revisadoVista?'Pendiente':pctVista>=85?'Excelente':pctVista>=60?'Regular':'Bajo'} />
-                        <StatCard label="Tickets no recogidos" value={revisadoVista?ticketsNoRecVista:'—'} color='#7c3aed' sub={revisadoVista?`de ${ticketsTotalVista} del mes`:'Sin datos'} />
-                        {hayPrecios && <StatCard label="Valor total tickets" value={fmtCOP(valorTotalVista)} color='#0d9488' sub={revisadoVista && valorNoRecVista > 0 ? `Sin recoger: ${fmtCOP(valorNoRecVista)}` : undefined} />}
-                    </div>
-
-                    {/* Gráficas del mes visto */}
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1.8fr', gap:'16px', marginBottom:'20px' }}>
-                        <Card>
-                            <SectionTitle>🔵 Distribución General</SectionTitle>
-                            {revisadoVista && total > 0 ? (
-                                <ResponsiveContainer width="100%" height={200}>
-                                    <PieChart>
-                                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={80} paddingAngle={3} dataKey="value"
-                                            label={({ percent }) => `${Math.round(percent*100)}%`} labelLine={false}>
-                                            {pieData.map((e,i) => <Cell key={i} fill={e.color} />)}
-                                        </Pie>
-                                        <Tooltip content={<TooltipPie total={total} />} />
-                                        <Legend formatter={v=><span style={{fontSize:'11px'}}>{v}</span>} iconSize={10} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <p style={{ textAlign:'center', color:'#94a3b8', fontSize:'13px', paddingTop:'55px' }}>{revisadoVista?'Sin datos':'Pendiente de revisión'}</p>
-                            )}
-                        </Card>
-                        <Card>
-                            <SectionTitle>🏫 Por Universidad</SectionTitle>
-                            {revisadoVista && univData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={200}>
-                                    <BarChart data={univData} layout="vertical" margin={{ left:0, right:16, top:0, bottom:0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                        <XAxis type="number" tick={{ fontSize:9 }} />
-                                        <YAxis type="category" dataKey="name" tick={{ fontSize:9 }} width={100} />
-                                        <Tooltip content={<TooltipBar />} />
-                                        <Legend formatter={v=><span style={{fontSize:'10px'}}>{v}</span>} iconSize={10} />
-                                        <Bar dataKey="si" name="Sí recogió" fill={C.si} radius={[0,4,4,0]} maxBarSize={18} />
-                                        <Bar dataKey="no" name="No recogió" fill={C.no} radius={[0,4,4,0]} maxBarSize={18} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <p style={{ textAlign:'center', color:'#94a3b8', fontSize:'13px', paddingTop:'55px' }}>{revisadoVista?'Sin datos':'Pendiente de revisión'}</p>
-                            )}
-                        </Card>
-                    </div>
-
-                    {revisadoVista && destData.length > 1 && (
-                        <Card style={{ marginBottom:'20px' }}>
-                            <SectionTitle>🗺️ Por Destino</SectionTitle>
-                            <ResponsiveContainer width="100%" height={140}>
-                                <BarChart data={destData} margin={{ left:0, right:16, top:0, bottom:0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" tick={{ fontSize:10 }} />
-                                    <YAxis tick={{ fontSize:10 }} />
-                                    <Tooltip content={<TooltipBar />} />
-                                    <Legend formatter={v=><span style={{fontSize:'10px'}}>{v}</span>} iconSize={10} />
-                                    <Bar dataKey="si" name="Sí recogió" fill={C.verde} radius={[4,4,0,0]} maxBarSize={30} />
-                                    <Bar dataKey="no" name="No recogió" fill={C.no} radius={[4,4,0,0]} maxBarSize={30} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    )}
-
-                    {/* Banner tickets no recogidos */}
-                    {revisadoVista && noRecogieronVista.length > 0 && (
-                        <div style={{ marginBottom:'20px', padding:'14px 18px', background:'#fdf4ff', border:'1.5px solid #e9d5ff', borderRadius:'12px', display:'flex', alignItems:'center', gap:'16px', flexWrap:'wrap' }}>
-                            <span style={{ fontSize:'22px' }}>🎟️</span>
-                            <div style={{ flex:1 }}>
-                                <div style={{ fontSize:'13px', fontWeight:'700', color:'#6b21a8' }}>
-                                    Control de tickets — {getMesLabel(mesVista)}
-                                </div>
-                                <div style={{ fontSize:'12px', color:'#7e22ce', marginTop:'3px' }}>
-                                    <strong>{noRecogieronVista.length}</strong> persona{noRecogieronVista.length!==1?'s':''} no recogieron →&nbsp;
-                                    <strong style={{ fontSize:'15px' }}>{ticketsNoRecVista}</strong> ticket{ticketsNoRecVista!==1?'s':''} sin entregar
-                                    &nbsp;(de <strong>{ticketsTotalVista}</strong> del mes, sin festivos)
-                                </div>
-                                {hayPrecios && (
-                                    <div style={{ fontSize:'12px', color:'#6b21a8', marginTop:'4px' }}>
-                                        Valor sin recoger: <strong style={{ color:'#dc2626', fontSize:'14px' }}>{fmtCOP(valorNoRecVista)}</strong>
-                                        &nbsp;· Valor total del mes: <strong>{fmtCOP(valorTotalVista)}</strong>
-                                    </div>
-                                )}
+                        {/* Título */}
+                        <div style={{ flex:1, background:'linear-gradient(135deg,#14532d 0%,#166534 60%,#15803d 100%)', padding:'12px 16px', color:'white', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'10px', minWidth:0 }}>
+                            <div style={{ minWidth:0, flex:1 }}>
+                                <p className="im-hdr-meta">Alcaldía Municipal de Candelaria · Valle del Cauca</p>
+                                <h2 className="im-hdr-title">📊 Informe de Distribución de Tickets</h2>
+                                <p className="im-hdr-sub" style={{ display:'flex', flexWrap:'wrap', gap:'6px', alignItems:'center' }}>
+                                    <span>Viendo: <strong>{getMesLabel(mesVista)}</strong></span>
+                                    {mesVista !== mesAnio && (
+                                        <span style={{ background:'rgba(202,138,4,0.35)', padding:'1px 7px', borderRadius:'99px', fontSize:'10px' }}>histórico</span>
+                                    )}
+                                    {mesVista === mesAnio && !revisadoMesActual && (
+                                        <span style={{ background:'rgba(251,191,36,0.25)', padding:'1px 8px', borderRadius:'99px', fontSize:'10px', color:'#fef9c3' }}>⏳ Sin revisión</span>
+                                    )}
+                                    {totalExcluidos > 0 && (
+                                        <span style={{ background:'rgba(255,255,255,0.18)', padding:'1px 8px', borderRadius:'99px', fontSize:'10px' }}>{totalExcluidos} excluido{totalExcluidos>1?'s':''}</span>
+                                    )}
+                                </p>
                             </div>
-                            <div style={{ textAlign:'right', flexShrink:0 }}>
-                                <div style={{ fontSize:'28px', fontWeight:'800', color:'#7c3aed' }}>{ticketsNoRecVista}</div>
-                                <div style={{ fontSize:'10px', color:'#9333ea' }}>tickets pendientes</div>
-                                {hayPrecios && (
-                                    <div style={{ fontSize:'13px', fontWeight:'800', color:'#dc2626', marginTop:'4px' }}>{fmtCOP(valorNoRecVista)}</div>
-                                )}
-                            </div>
+                            <button
+                                onClick={onClose}
+                                style={{ background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:'8px', color:'white', cursor:'pointer', fontSize:'18px', padding:'5px 11px', lineHeight:1, flexShrink:0 }}
+                            >✕</button>
                         </div>
-                    )}
+                    </div>
 
-                    {/* ── Tabla de beneficiarios ── */}
-                    <div style={{ marginBottom:'24px' }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px', flexWrap:'wrap', gap:'8px' }}>
-                            <h3 style={{ margin:0, fontSize:'13px', fontWeight:'700', color:'#334155' }}>
-                                📋 Listado de Beneficiarios — {getMesLabel(mesVista)}
-                            </h3>
-                            {totalExcluidos > 0 && (
-                                <button onClick={() => setRegistrosExcluidos(new Set())} style={{ fontSize:'11px', padding:'4px 12px', borderRadius:'99px', border:'1px solid #cbd5e1', background:'white', color:'#64748b', cursor:'pointer' }}>
-                                    ↺ Incluir todos en PDF
-                                </button>
-                            )}
-                        </div>
+                    {/* Línea dorada */}
+                    <div style={{ height:'3px', background:'linear-gradient(90deg,#ca8a04,#fde68a,#ca8a04)', flexShrink:0 }} />
 
-                        <div style={{ display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap', alignItems:'center' }}>
-                            <button style={tabStyle(filtroTabla==='TODOS', C.verde)} onClick={()=>setFiltroTabla('TODOS')}>Todos ({data.length})</button>
-                            <button style={tabStyle(filtroTabla==='NO_RECOGIERON', C.no)} onClick={()=>setFiltroTabla('NO_RECOGIERON')}>✗ No recogieron ({noRecogieronListVista.length})</button>
-                            <button style={tabStyle(filtroTabla==='SI_RECOGIERON', C.si)} onClick={()=>setFiltroTabla('SI_RECOGIERON')}>✓ Sí / Sin dato ({siRecogieronListVista.length})</button>
-                            <input value={busqueda} onChange={e=>setBusqueda(e.target.value)} placeholder="🔍 Nombre o cédula..."
-                                style={{ flex:1, minWidth:'160px', padding:'5px 10px', borderRadius:'8px', border:'1px solid #e2e8f0', fontSize:'12px', outline:'none' }} />
-                        </div>
+                    {/* ── Toolbar de acciones (scroll horizontal en móvil) ── */}
+                    <div className="im-toolbar">
+                        <span style={{ fontSize:'11px', fontWeight:'700', color:'#475569', whiteSpace:'nowrap' }}>📅 Mes:</span>
+                        <select
+                            value={mesVista}
+                            onChange={e => setMesVista(e.target.value)}
+                            style={{ padding:'6px 10px', borderRadius:'8px', border:'1.5px solid #d1d5db', background:'white', color:'#14532d', fontSize:'12px', fontWeight:'600', cursor:'pointer', outline:'none' }}
+                        >
+                            {mesesDisponibles.map(({ mes, label }) => (
+                                <option key={mes} value={mes}>{label}</option>
+                            ))}
+                        </select>
 
-                        <div style={{ overflowX:'auto', borderRadius:'10px', border:'1px solid #e2e8f0', maxHeight:'340px', overflowY:'auto' }}>
-                            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'12px' }}>
-                                <thead style={{ position:'sticky', top:0, zIndex:2 }}>
-                                    <tr style={{ background:'#14532d' }}>
-                                        <th style={{ padding:'9px 10px', textAlign:'center', fontWeight:'700', color:'white', borderBottom:'2px solid #ca8a04', width:'48px' }} title="Incluir en PDF">PDF</th>
-                                        {['#','Nombre Completo','Cédula','Universidad','Destino','SISBEN','Tickets','Estado'].map(h => (
-                                            <th key={h} style={{ padding:'9px 10px', textAlign:'left', fontWeight:'700', color:'white', borderBottom:'2px solid #ca8a04', whiteSpace:'nowrap' }}>{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {datosTabla.length === 0 ? (
-                                        <tr><td colSpan={10} style={{ padding:'24px', textAlign:'center', color:'#94a3b8' }}>Sin resultados</td></tr>
-                                    ) : datosTabla.map((item, i) => {
-                                        const noVino   = tdVista[item.cedula] === false
-                                        const excluido = registrosExcluidos.has(item.cedula)
-                                        const badge    = estadoBadge(item.cedula)
-                                        const tks      = calcTickets(item, mesVista)
-                                        return (
-                                            <tr key={item.id} style={{ borderBottom:'1px solid #f1f5f9', background: excluido?'#fafafa':noVino?(i%2===0?'#fff5f5':'#fff8f8'):(i%2===0?'white':'#f9fafb'), opacity:excluido?0.45:1, transition:'opacity 0.2s' }}>
-                                                <td style={{ padding:'7px 10px', textAlign:'center' }}>
-                                                    <input type="checkbox" checked={!excluido} onChange={()=>toggleRegistro(item.cedula)}
-                                                        style={{ width:'15px', height:'15px', cursor:'pointer', accentColor:'#14532d' }}
-                                                        title={excluido?'Incluir en PDF':'Excluir del PDF'} />
-                                                </td>
-                                                <td style={{ padding:'7px 10px', color:'#94a3b8', fontSize:'11px' }}>{i+1}</td>
-                                                <td style={{ padding:'7px 10px', fontWeight:'600', textDecoration:excluido?'line-through':'none' }}>{item.nombre_completo}</td>
-                                                <td style={{ padding:'7px 10px', fontFamily:'monospace', fontSize:'11px' }}>{item.cedula}</td>
-                                                <td style={{ padding:'7px 10px', maxWidth:'160px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.universidad||'—'}</td>
-                                                <td style={{ padding:'7px 10px' }}>{item.destino||'—'}</td>
-                                                <td style={{ padding:'7px 10px' }}>
-                                                    {item.sisben?<span style={{ padding:'2px 8px', borderRadius:'99px', background:'#eff6ff', color:'#1e40af', fontWeight:'700', fontSize:'10px' }}>{item.sisben}</span>:<span style={{ color:'#d1d5db' }}>—</span>}
-                                                </td>
-                                                <td style={{ padding:'7px 10px', textAlign:'center' }}>
-                                                    <span style={{ padding:'2px 8px', borderRadius:'99px', background:noVino?'#f3e8ff':'#f1f5f9', color:noVino?'#7c3aed':'#64748b', fontWeight:'700', fontSize:'11px' }}>
-                                                        {tks}
-                                                    </span>
-                                                </td>
-                                                <td style={{ padding:'7px 10px' }}>
-                                                    <span style={{ padding:'3px 10px', borderRadius:'99px', fontWeight:'700', fontSize:'10px', background:badge.bg, color:badge.color, whiteSpace:'nowrap' }}>{badge.txt}</span>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                        <div style={{ width:'1px', height:'28px', background:'#e2e8f0', flexShrink:0 }} />
 
-                        {totalExcluidos > 0 && (
-                            <div style={{ marginTop:'8px', padding:'7px 14px', background:'#fffbeb', borderRadius:'8px', border:'1px solid #fde68a', fontSize:'11px', color:'#92400e' }}>
-                                ℹ️ <strong>{totalExcluidos} persona{totalExcluidos>1?'s':''}</strong> excluida{totalExcluidos>1?'s':''} del PDF — activa la casilla para incluir.
+                        <BtnAccion onClick={exportarPDF} bg='#ca8a04'>📄 Informe mes</BtnAccion>
+                        <BtnAccion onClick={exportarPDFCompleto} bg='#7c3aed' disabled={exportandoCompleto}>
+                            {exportandoCompleto ? '⏳ Generando...' : '📋 Completo'}
+                        </BtnAccion>
+                        <BtnAccion onClick={exportarReporteExcel} bg='#15803d'>💰 Gastos Excel</BtnAccion>
+                        <BtnAccion onClick={exportarReporteGastosPDF} bg='#0f766e'>💰 Gastos PDF</BtnAccion>
+                    </div>
+
+                    {/* ── Body ── */}
+                    <div className="im-body">
+
+                        {cargandoSnap && (
+                            <div style={{ marginBottom:'12px', padding:'10px 16px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'10px', color:'#1e40af', fontSize:'12px', fontWeight:'600' }}>
+                                ⏳ Cargando datos históricos de {getMesLabel(mesVista)}...
                             </div>
                         )}
-                    </div>
-
-                    {/* ── Histórico ── */}
-                    {!cargando && historico.length >= 1 && (
-                        <div>
-                            <SectionTitle
-                                right={
-                                    <div style={{ display:'flex', gap:'6px' }}>
-                                        <button onClick={()=>setMesesSeleccionados(new Set(historico.map(h=>h.mes)))} style={tabStyle(false)}>Todos</button>
-                                        <button onClick={()=>setMesesSeleccionados(new Set())} style={tabStyle(false)}>Ninguno</button>
-                                    </div>
-                                }
-                            >📈 Histórico por Mes</SectionTitle>
-
-                            <div style={{ display:'flex', gap:'6px', flexWrap:'wrap', marginBottom:'14px', padding:'10px 14px', background:'#f1f5f9', borderRadius:'10px', border:'1px solid #e2e8f0' }}>
-                                <span style={{ fontSize:'11px', fontWeight:'700', color:'#475569', alignSelf:'center', marginRight:'4px' }}>Meses en PDF:</span>
-                                {historico.map(h => (
-                                    <button key={h.mes} onClick={()=>toggleMes(h.mes)} style={btnMes(mesesSeleccionados.has(h.mes))}>
-                                        {h.label}{h.mes===mesAnio?' ★':''}
-                                    </button>
-                                ))}
+                        {mesVista !== mesAnio && !cargandoSnap && dataHistorica.length === 0 && (
+                            <div style={{ marginBottom:'12px', padding:'10px 16px', background:'#fefce8', border:'1px solid #fde68a', borderRadius:'10px', color:'#854d0e', fontSize:'12px', fontWeight:'600' }}>
+                                ⚠️ No hay snapshot guardado para {getMesLabel(mesVista)} — se muestran los datos actuales.
                             </div>
+                        )}
+                        {!revisadoVista && (
+                            <div style={{ marginBottom:'16px', padding:'12px 16px', background:'#fffbeb', border:'1px solid #fde68a', borderRadius:'10px', color:'#92400e', fontSize:'13px', fontWeight:'600', display:'flex', gap:'8px' }}>
+                                ⏳ Sin datos de revisión para <strong>{getMesLabel(mesVista)}</strong>
+                                {mesVista === mesAnio && ' — ve a la tabla principal y marca quiénes no recogieron.'}
+                            </div>
+                        )}
 
-                            {historicoFiltrado.length > 1 && (
-                                <Card style={{ marginBottom:'16px' }}>
-                                    <ResponsiveContainer width="100%" height={190}>
-                                        <BarChart data={historicoFiltrado} margin={{ left:0, right:20, top:0, bottom:24 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="label" tick={{ fontSize:10 }} angle={-20} textAnchor="end" interval={0} />
-                                            <YAxis tick={{ fontSize:10 }} />
+                        {/* Stat Cards */}
+                        <div className="im-stats">
+                            <StatCard label="Total Beneficiarios"   value={total}                          color={C.azul}    sub={totalExcluidos>0?`${totalExcluidos} excluido${totalExcluidos!==1?'s':''}`:undefined} />
+                            <StatCard label="Sí Recogieron"         value={revisadoVista?siCountVista:'—'}  color={C.si}      sub={revisadoVista?`${pctVista}% del total`:'Sin datos'} />
+                            <StatCard label="No Recogieron"         value={revisadoVista?noRecogieronVista.length:'—'} color={C.no} sub={revisadoVista?`${100-pctVista}% del total`:'Sin datos'} />
+                            <StatCard label="% Asistencia"          value={revisadoVista?`${pctVista}%`:'—'} color={!revisadoVista?C.naranja:pctVista>=85?C.si:pctVista>=60?C.naranja:C.no} sub={!revisadoVista?'Pendiente':pctVista>=85?'Excelente':pctVista>=60?'Regular':'Bajo'} />
+                            <StatCard label="Tickets no recogidos"  value={revisadoVista?ticketsNoRecVista:'—'} color='#7c3aed' sub={revisadoVista?`de ${ticketsTotalVista} del mes`:'Sin datos'} />
+                            {hayPrecios && (
+                                <StatCard
+                                    label="Valor total tickets"
+                                    value={fmtCOP(valorTotalVista)}
+                                    color='#0d9488'
+                                    sub={revisadoVista && valorNoRecVista > 0 ? `Sin recoger: ${fmtCOP(valorNoRecVista)}` : undefined}
+                                />
+                            )}
+                        </div>
+
+                        {/* Gráficas */}
+                        <div className="im-charts">
+                            <Card>
+                                <SectionTitle>🔵 Distribución General</SectionTitle>
+                                {revisadoVista && total > 0 ? (
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <PieChart>
+                                            <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={80} paddingAngle={3} dataKey="value"
+                                                label={({ percent }) => `${Math.round(percent*100)}%`} labelLine={false}>
+                                                {pieData.map((e,i) => <Cell key={i} fill={e.color} />)}
+                                            </Pie>
+                                            <Tooltip content={<TooltipPie total={total} />} />
+                                            <Legend formatter={v=><span style={{fontSize:'11px'}}>{v}</span>} iconSize={10} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <p style={{ textAlign:'center', color:'#94a3b8', fontSize:'13px', paddingTop:'55px' }}>{revisadoVista?'Sin datos':'Pendiente de revisión'}</p>
+                                )}
+                            </Card>
+                            <Card>
+                                <SectionTitle>🏫 Por Universidad</SectionTitle>
+                                {revisadoVista && univData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <BarChart data={univData} layout="vertical" margin={{ left:0, right:16, top:0, bottom:0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                            <XAxis type="number" tick={{ fontSize:9 }} />
+                                            <YAxis type="category" dataKey="name" tick={{ fontSize:9 }} width={100} />
                                             <Tooltip content={<TooltipBar />} />
                                             <Legend formatter={v=><span style={{fontSize:'10px'}}>{v}</span>} iconSize={10} />
-                                            <Bar dataKey="siRecogieron" name="Sí recogieron" fill={C.verde} radius={[4,4,0,0]} maxBarSize={30} />
-                                            <Bar dataKey="noRecogieron" name="No recogieron" fill={C.no} radius={[4,4,0,0]} maxBarSize={30} />
+                                            <Bar dataKey="si" name="Sí recogió" fill={C.si} radius={[0,4,4,0]} maxBarSize={18} />
+                                            <Bar dataKey="no" name="No recogió" fill={C.no} radius={[0,4,4,0]} maxBarSize={18} />
                                         </BarChart>
                                     </ResponsiveContainer>
-                                </Card>
-                            )}
+                                ) : (
+                                    <p style={{ textAlign:'center', color:'#94a3b8', fontSize:'13px', paddingTop:'55px' }}>{revisadoVista?'Sin datos':'Pendiente de revisión'}</p>
+                                )}
+                            </Card>
+                        </div>
 
-                            {historicoFiltrado.length > 0 ? (
-                                <div style={{ overflowX:'auto', borderRadius:'10px', border:'1px solid #e2e8f0' }}>
-                                    <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'12px' }}>
-                                        <thead>
-                                            <tr style={{ background:'#f1f5f9' }}>
-                                                {['Mes','Sí Recogieron','No Recogieron','Total','% Asistencia'].map(h=>(
-                                                    <th key={h} style={{ padding:'8px 12px', textAlign:'center', fontWeight:'700', color:'#334155', borderBottom:'1px solid #e2e8f0', whiteSpace:'nowrap' }}>{h}</th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {historicoFiltrado.map(h => (
-                                                <tr key={h.mes} style={{ borderBottom:'1px solid #f1f5f9', background:h.mes===mesVista?'#f0fdf4':'white' }}>
-                                                    <td style={{ padding:'8px 12px', fontWeight:h.mes===mesVista?'700':'500', color:h.mes===mesVista?'#14532d':'#334155' }}>
-                                                        {h.label}
-                                                        {h.mes===mesAnio&&<span style={{ fontSize:'10px', background:'#bbf7d0', color:'#14532d', padding:'1px 6px', borderRadius:'99px', marginLeft:'6px' }}>actual</span>}
-                                                        {h.mes===mesVista&&h.mes!==mesAnio&&<span style={{ fontSize:'10px', background:'#e0f2fe', color:'#0369a1', padding:'1px 6px', borderRadius:'99px', marginLeft:'6px' }}>viendo</span>}
+                        {revisadoVista && destData.length > 1 && (
+                            <Card style={{ marginBottom:'20px' }}>
+                                <SectionTitle>🗺️ Por Destino</SectionTitle>
+                                <ResponsiveContainer width="100%" height={140}>
+                                    <BarChart data={destData} margin={{ left:0, right:16, top:0, bottom:0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                        <XAxis dataKey="name" tick={{ fontSize:10 }} />
+                                        <YAxis tick={{ fontSize:10 }} />
+                                        <Tooltip content={<TooltipBar />} />
+                                        <Legend formatter={v=><span style={{fontSize:'10px'}}>{v}</span>} iconSize={10} />
+                                        <Bar dataKey="si" name="Sí recogió" fill={C.verde} radius={[4,4,0,0]} maxBarSize={30} />
+                                        <Bar dataKey="no" name="No recogió" fill={C.no} radius={[4,4,0,0]} maxBarSize={30} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </Card>
+                        )}
+
+                        {/* Banner tickets no recogidos */}
+                        {revisadoVista && noRecogieronVista.length > 0 && (
+                            <div style={{ marginBottom:'20px', padding:'14px 16px', background:'#fdf4ff', border:'1.5px solid #e9d5ff', borderRadius:'12px' }}>
+                                <div style={{ display:'flex', alignItems:'flex-start', gap:'12px', flexWrap:'wrap' }}>
+                                    <span style={{ fontSize:'22px' }}>🎟️</span>
+                                    <div style={{ flex:1, minWidth:'180px' }}>
+                                        <div style={{ fontSize:'13px', fontWeight:'700', color:'#6b21a8' }}>
+                                            Control de tickets — {getMesLabel(mesVista)}
+                                        </div>
+                                        <div style={{ fontSize:'12px', color:'#7e22ce', marginTop:'3px' }}>
+                                            <strong>{noRecogieronVista.length}</strong> persona{noRecogieronVista.length!==1?'s':''} no recogieron →&nbsp;
+                                            <strong style={{ fontSize:'15px' }}>{ticketsNoRecVista}</strong> ticket{ticketsNoRecVista!==1?'s':''} sin entregar
+                                            &nbsp;(de <strong>{ticketsTotalVista}</strong> del mes)
+                                        </div>
+                                        {hayPrecios && (
+                                            <div style={{ fontSize:'12px', color:'#6b21a8', marginTop:'4px', wordBreak:'break-word' }}>
+                                                Sin recoger: <strong style={{ color:'#dc2626' }}>{fmtCOP(valorNoRecVista)}</strong>
+                                                &nbsp;· Total mes: <strong>{fmtCOP(valorTotalVista)}</strong>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{ textAlign:'right', flexShrink:0 }}>
+                                        <div style={{ fontSize:'28px', fontWeight:'800', color:'#7c3aed' }}>{ticketsNoRecVista}</div>
+                                        <div style={{ fontSize:'10px', color:'#9333ea' }}>tickets pendientes</div>
+                                        {hayPrecios && (
+                                            <div style={{ fontSize:'13px', fontWeight:'800', color:'#dc2626', marginTop:'4px', wordBreak:'break-word' }}>{fmtCOP(valorNoRecVista)}</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Tabla de beneficiarios ── */}
+                        <div style={{ marginBottom:'24px' }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px', flexWrap:'wrap', gap:'8px' }}>
+                                <h3 style={{ margin:0, fontSize:'13px', fontWeight:'700', color:'#334155' }}>
+                                    📋 Listado de Beneficiarios — {getMesLabel(mesVista)}
+                                </h3>
+                                {totalExcluidos > 0 && (
+                                    <button onClick={() => setRegistrosExcluidos(new Set())} style={{ fontSize:'11px', padding:'4px 12px', borderRadius:'99px', border:'1px solid #cbd5e1', background:'white', color:'#64748b', cursor:'pointer' }}>
+                                        ↺ Incluir todos
+                                    </button>
+                                )}
+                            </div>
+
+                            <div style={{ display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap', alignItems:'center' }}>
+                                <button style={tabStyle(filtroTabla==='TODOS', C.verde)} onClick={()=>setFiltroTabla('TODOS')}>Todos ({dataActiva.length})</button>
+                                <button style={tabStyle(filtroTabla==='NO_RECOGIERON', C.no)} onClick={()=>setFiltroTabla('NO_RECOGIERON')}>✗ No ({noRecogieronListVista.length})</button>
+                                <button style={tabStyle(filtroTabla==='SI_RECOGIERON', C.si)} onClick={()=>setFiltroTabla('SI_RECOGIERON')}>✓ Sí ({siRecogieronListVista.length})</button>
+                                <input value={busqueda} onChange={e=>setBusqueda(e.target.value)} placeholder="🔍 Nombre o cédula..."
+                                    style={{ flex:1, minWidth:'140px', padding:'5px 10px', borderRadius:'8px', border:'1px solid #e2e8f0', fontSize:'12px', outline:'none' }} />
+                            </div>
+
+                            <div style={{ overflowX:'auto', borderRadius:'10px', border:'1px solid #e2e8f0', maxHeight:'320px', overflowY:'auto' }}>
+                                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'12px', minWidth:'640px' }}>
+                                    <thead style={{ position:'sticky', top:0, zIndex:2 }}>
+                                        <tr style={{ background:'#14532d' }}>
+                                            <th style={{ padding:'9px 10px', textAlign:'center', fontWeight:'700', color:'white', borderBottom:'2px solid #ca8a04', width:'42px' }} title="Incluir en PDF">PDF</th>
+                                            {['#','Nombre','Cédula','Universidad','Destino','SISBEN','Tickets','Estado'].map(h => (
+                                                <th key={h} style={{ padding:'9px 10px', textAlign:'left', fontWeight:'700', color:'white', borderBottom:'2px solid #ca8a04', whiteSpace:'nowrap' }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {datosTabla.length === 0 ? (
+                                            <tr><td colSpan={10} style={{ padding:'24px', textAlign:'center', color:'#94a3b8' }}>Sin resultados</td></tr>
+                                        ) : datosTabla.map((item, i) => {
+                                            const noVino   = tdVista[item.cedula] === false
+                                            const excluido = registrosExcluidos.has(item.cedula)
+                                            const badge    = estadoBadge(item.cedula)
+                                            const tks      = calcTickets(item, mesVista)
+                                            return (
+                                                <tr key={item.id} style={{ borderBottom:'1px solid #f1f5f9', background: excluido?'#fafafa':noVino?(i%2===0?'#fff5f5':'#fff8f8'):(i%2===0?'white':'#f9fafb'), opacity:excluido?0.45:1, transition:'opacity 0.2s' }}>
+                                                    <td style={{ padding:'7px 10px', textAlign:'center' }}>
+                                                        <input type="checkbox" checked={!excluido} onChange={()=>toggleRegistro(item.cedula)}
+                                                            style={{ width:'15px', height:'15px', cursor:'pointer', accentColor:'#14532d' }}
+                                                            title={excluido?'Incluir en PDF':'Excluir del PDF'} />
                                                     </td>
-                                                    <td style={{ padding:'8px 12px', textAlign:'center', color:C.si, fontWeight:'700' }}>{h.siRecogieron}</td>
-                                                    <td style={{ padding:'8px 12px', textAlign:'center', color:h.noRecogieron>0?C.no:'#94a3b8', fontWeight:h.noRecogieron>0?'700':'400' }}>{h.noRecogieron}</td>
-                                                    <td style={{ padding:'8px 12px', textAlign:'center', color:'#64748b' }}>{total}</td>
-                                                    <td style={{ padding:'8px 12px', textAlign:'center' }}>
-                                                        <span style={{ padding:'2px 10px', borderRadius:'99px', fontWeight:'700', fontSize:'11px', background:h.pct>=85?'#dcfce7':h.pct>=60?'#fef9c3':'#fee2e2', color:h.pct>=85?'#166534':h.pct>=60?'#854d0e':'#991b1b' }}>
-                                                            {h.pct}%
+                                                    <td style={{ padding:'7px 10px', color:'#94a3b8', fontSize:'11px' }}>{i+1}</td>
+                                                    <td style={{ padding:'7px 10px', fontWeight:'600', textDecoration:excluido?'line-through':'none', maxWidth:'160px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.nombre_completo}</td>
+                                                    <td style={{ padding:'7px 10px', fontFamily:'monospace', fontSize:'11px' }}>{item.cedula}</td>
+                                                    <td style={{ padding:'7px 10px', maxWidth:'130px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.universidad||'—'}</td>
+                                                    <td style={{ padding:'7px 10px', whiteSpace:'nowrap' }}>{item.destino||'—'}</td>
+                                                    <td style={{ padding:'7px 10px' }}>
+                                                        {item.sisben?<span style={{ padding:'2px 8px', borderRadius:'99px', background:'#eff6ff', color:'#1e40af', fontWeight:'700', fontSize:'10px' }}>{item.sisben}</span>:<span style={{ color:'#d1d5db' }}>—</span>}
+                                                    </td>
+                                                    <td style={{ padding:'7px 10px', textAlign:'center' }}>
+                                                        <span style={{ padding:'2px 8px', borderRadius:'99px', background:noVino?'#f3e8ff':'#f1f5f9', color:noVino?'#7c3aed':'#64748b', fontWeight:'700', fontSize:'11px' }}>
+                                                            {tks}
                                                         </span>
                                                     </td>
+                                                    <td style={{ padding:'7px 10px' }}>
+                                                        <span style={{ padding:'3px 10px', borderRadius:'99px', fontWeight:'700', fontSize:'10px', background:badge.bg, color:badge.color, whiteSpace:'nowrap' }}>{badge.txt}</span>
+                                                    </td>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div style={{ padding:'20px', background:'#f8fafc', borderRadius:'10px', border:'1px solid #e2e8f0', textAlign:'center', color:'#94a3b8', fontSize:'13px' }}>
-                                    Selecciona al menos un mes para ver el histórico.
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {totalExcluidos > 0 && (
+                                <div style={{ marginTop:'8px', padding:'7px 14px', background:'#fffbeb', borderRadius:'8px', border:'1px solid #fde68a', fontSize:'11px', color:'#92400e' }}>
+                                    ℹ️ <strong>{totalExcluidos} persona{totalExcluidos>1?'s':''}</strong> excluida{totalExcluidos>1?'s':''} del PDF.
                                 </div>
                             )}
                         </div>
-                    )}
 
-                    {cargando && <p style={{ textAlign:'center', color:'#94a3b8', fontSize:'13px', padding:'16px' }}>Cargando histórico...</p>}
+                        {/* ── Histórico ── */}
+                        {!cargando && historico.length >= 1 && (
+                            <div>
+                                <SectionTitle
+                                    right={
+                                        <div style={{ display:'flex', gap:'6px' }}>
+                                            <button onClick={()=>setMesesSeleccionados(new Set(historico.map(h=>h.mes)))} style={tabStyle(false)}>Todos</button>
+                                            <button onClick={()=>setMesesSeleccionados(new Set())} style={tabStyle(false)}>Ninguno</button>
+                                        </div>
+                                    }
+                                >📈 Histórico por Mes</SectionTitle>
+
+                                <div style={{ display:'flex', gap:'6px', flexWrap:'wrap', marginBottom:'14px', padding:'10px 14px', background:'#f1f5f9', borderRadius:'10px', border:'1px solid #e2e8f0' }}>
+                                    <span style={{ fontSize:'11px', fontWeight:'700', color:'#475569', alignSelf:'center', marginRight:'4px' }}>Meses en PDF:</span>
+                                    {historico.map(h => (
+                                        <button key={h.mes} onClick={()=>toggleMes(h.mes)} style={btnMes(mesesSeleccionados.has(h.mes))}>
+                                            {h.label}{h.mes===mesAnio?' ★':''}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {historicoFiltrado.length > 1 && (
+                                    <Card style={{ marginBottom:'16px' }}>
+                                        <ResponsiveContainer width="100%" height={190}>
+                                            <BarChart data={historicoFiltrado} margin={{ left:0, right:20, top:0, bottom:24 }}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                <XAxis dataKey="label" tick={{ fontSize:10 }} angle={-20} textAnchor="end" interval={0} />
+                                                <YAxis tick={{ fontSize:10 }} />
+                                                <Tooltip content={<TooltipBar />} />
+                                                <Legend formatter={v=><span style={{fontSize:'10px'}}>{v}</span>} iconSize={10} />
+                                                <Bar dataKey="siRecogieron" name="Sí recogieron" fill={C.verde} radius={[4,4,0,0]} maxBarSize={30} />
+                                                <Bar dataKey="noRecogieron" name="No recogieron" fill={C.no} radius={[4,4,0,0]} maxBarSize={30} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </Card>
+                                )}
+
+                                {historicoFiltrado.length > 0 ? (
+                                    <div style={{ overflowX:'auto', borderRadius:'10px', border:'1px solid #e2e8f0' }}>
+                                        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'12px', minWidth:'400px' }}>
+                                            <thead>
+                                                <tr style={{ background:'#f1f5f9' }}>
+                                                    {['Mes','Sí Recogieron','No Recogieron','Total','% Asistencia'].map(h=>(
+                                                        <th key={h} style={{ padding:'8px 12px', textAlign:'center', fontWeight:'700', color:'#334155', borderBottom:'1px solid #e2e8f0', whiteSpace:'nowrap' }}>{h}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {historicoFiltrado.map(h => (
+                                                    <tr key={h.mes} style={{ borderBottom:'1px solid #f1f5f9', background:h.mes===mesVista?'#f0fdf4':'white' }}>
+                                                        <td style={{ padding:'8px 12px', fontWeight:h.mes===mesVista?'700':'500', color:h.mes===mesVista?'#14532d':'#334155' }}>
+                                                            {h.label}
+                                                            {h.mes===mesAnio&&<span style={{ fontSize:'10px', background:'#bbf7d0', color:'#14532d', padding:'1px 6px', borderRadius:'99px', marginLeft:'6px' }}>actual</span>}
+                                                            {h.mes===mesVista&&h.mes!==mesAnio&&<span style={{ fontSize:'10px', background:'#e0f2fe', color:'#0369a1', padding:'1px 6px', borderRadius:'99px', marginLeft:'6px' }}>viendo</span>}
+                                                        </td>
+                                                        <td style={{ padding:'8px 12px', textAlign:'center', color:C.si, fontWeight:'700' }}>{h.siRecogieron}</td>
+                                                        <td style={{ padding:'8px 12px', textAlign:'center', color:h.noRecogieron>0?C.no:'#94a3b8', fontWeight:h.noRecogieron>0?'700':'400' }}>{h.noRecogieron}</td>
+                                                        <td style={{ padding:'8px 12px', textAlign:'center', color:'#64748b' }}>{total}</td>
+                                                        <td style={{ padding:'8px 12px', textAlign:'center' }}>
+                                                            <span style={{ padding:'2px 10px', borderRadius:'99px', fontWeight:'700', fontSize:'11px', background:h.pct>=85?'#dcfce7':h.pct>=60?'#fef9c3':'#fee2e2', color:h.pct>=85?'#166534':h.pct>=60?'#854d0e':'#991b1b' }}>
+                                                                {h.pct}%
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div style={{ padding:'20px', background:'#f8fafc', borderRadius:'10px', border:'1px solid #e2e8f0', textAlign:'center', color:'#94a3b8', fontSize:'13px' }}>
+                                        Selecciona al menos un mes para ver el histórico.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {cargando && <p style={{ textAlign:'center', color:'#94a3b8', fontSize:'13px', padding:'16px' }}>Cargando histórico...</p>}
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     )
 }
