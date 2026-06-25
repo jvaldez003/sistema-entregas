@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a9e 100%);
+  background: linear-gradient(150deg, #14532d 0%, #15803d 60%, #ca8a04 100%);
   padding: 20px;
 }
 
@@ -15,6 +15,7 @@
   max-width: 400px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
   text-align: center;
+  border-top: 4px solid #ca8a04;
 }
 
 .logoWrap {
@@ -23,8 +24,8 @@
   margin-bottom: 16px;
 }
 
-.logoWrap svg {
-  filter: drop-shadow(0 4px 12px rgba(30, 58, 95, .25));
+.logoWrap img {
+  filter: drop-shadow(0 4px 12px rgba(20, 83, 45, .3));
 }
 
 .title {

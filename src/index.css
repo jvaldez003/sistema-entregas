@@ -8,11 +8,13 @@
   --text:      #1a2535;
   --text2:     #5a6a80;
   --text3:     #8a99ac;
-  --accent:    #1e3a5f;
-  --accent2:   #2d5a9e;
-  --accent-lt: #e8eef7;
+  --accent:    #14532d;
+  --accent2:   #15803d;
+  --accent-lt: #f0fdf4;
+  --oro:       #ca8a04;
+  --oro-lt:    #fef9c3;
   --danger:    #c0392b;
-  --success:   #1a7a4a;
+  --success:   #15803d;
   --warn:      #d4860a;
   --radius:    8px;
   --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.05);
@@ -48,7 +50,7 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent2);
-  box-shadow: 0 0 0 3px rgba(45,90,158,.12);
+  box-shadow: 0 0 0 3px rgba(21,128,61,.12);
 }
 input::placeholder, textarea::placeholder { color: var(--text3); }
 
