@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS public.entrega_papeles (
   cedula              TEXT         UNIQUE NOT NULL,
   correo              TEXT,
   telefono            TEXT,
+  fecha_nacimiento    DATE,
+  semestre            INTEGER,
   estado_entrega      TEXT         DEFAULT 'NO ENTREGÓ', -- Opciones: SÍ ENTREGÓ, NO ENTREGÓ, APLICA, NO APLICA
   residencia          TEXT,
   destino             TEXT,
@@ -35,6 +37,8 @@ CREATE TABLE IF NOT EXISTS public.entrega_papeles (
 -- Si la tabla ya existe, ejecuta estos ALTER TABLE para agregar las nuevas columnas:
 /*
 ALTER TABLE public.entrega_papeles
+ADD COLUMN fecha_nacimiento DATE,
+ADD COLUMN semestre INTEGER,
 ADD COLUMN residencia TEXT,
 ADD COLUMN destino TEXT,
 ADD COLUMN universidad TEXT,

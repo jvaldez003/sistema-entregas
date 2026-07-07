@@ -84,11 +84,11 @@ function styleSummaryCell(cell, { bold = false, bgColor = null, textColor = 'FF1
     }
 }
 
-function appendProveedorMonthlySummary(sheet, list, fechaEntrega, accentColor) {
+function appendProveedorMonthlySummary(sheet, list, fechaEntrega, accentColor, startRowOverride = null) {
     if (!list.length || !fechaEntrega) return 0
 
     const resumen = calcularResumenProveedor(list, fechaEntrega)
-    const startRow = list.length + 3
+    const startRow = startRowOverride ?? (list.length + 3)
     const summaryColCount = 5
     const mesLabel = getMesAnioLabel(fechaEntrega)
     const year = parseInt(fechaEntrega.split('-')[0], 10)
@@ -147,6 +147,107 @@ function appendProveedorMonthlySummary(sheet, list, fechaEntrega, accentColor) {
     return nextRow - startRow
 }
 
+async function tryLoadLogoForExcel() {
+    // Si el usuario agrega un logo en /public con alguno de estos nombres,
+    // el Excel lo insertará automáticamente en el encabezado.
+    const candidates = [
+        { url: '/logo.png', ext: 'png' },
+        { url: '/logo-alcaldia.png', ext: 'png' },
+        { url: '/alcaldia.png', ext: 'png' },
+        { url: '/escudo.png', ext: 'png' },
+        { url: '/logo.jpg', ext: 'jpeg' },
+        { url: '/logo.jpeg', ext: 'jpeg' }
+    ]
+
+    for (const c of candidates) {
+        try {
+            const res = await fetch(c.url)
+            if (!res.ok) continue
+            const buf = await res.arrayBuffer()
+            if (!buf || buf.byteLength === 0) continue
+            return { buffer: buf, extension: c.ext }
+        } catch {
+            // continuar
+        }
+    }
+    return null
+}
+
+function styleHeaderCell(cell, { bgColor, textColor = 'FFFFFFFF', bold = true } = {}) {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } }
+    cell.font = { bold, color: { argb: textColor }, size: 12 }
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+    cell.border = {
+        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+    }
+}
+
+function parseDateOnly(dateStr) {
+    if (!dateStr) return null
+    const s = String(dateStr).trim()
+    // Esperado: YYYY-MM-DD
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!m) return null
+    const y = Number(m[1])
+    const mo = Number(m[2])
+    const d = Number(m[3])
+    if (!y || mo < 1 || mo > 12 || d < 1 || d > 31) return null
+    const dt = new Date(Date.UTC(y, mo - 1, d))
+    // Validar que no haya overflow (ej: 2026-02-31)
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== (mo - 1) || dt.getUTCDate() !== d) return null
+    return dt
+}
+
+function daysInMonthUTC(year, monthIndex) {
+    // monthIndex: 0-11
+    return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate()
+}
+
+export function calcularEdadExacta(fechaNacimientoStr, refDate = new Date()) {
+    const birth = parseDateOnly(fechaNacimientoStr)
+    if (!birth) return null
+
+    const ref = new Date(refDate)
+    // Comparar en UTC para evitar desfases por zona horaria
+    let y = ref.getUTCFullYear()
+    let m = ref.getUTCMonth()
+    let d = ref.getUTCDate()
+
+    const by = birth.getUTCFullYear()
+    const bm = birth.getUTCMonth()
+    const bd = birth.getUTCDate()
+
+    // Si la fecha de nacimiento está en el futuro, no calcular
+    if (
+        y < by ||
+        (y === by && m < bm) ||
+        (y === by && m === bm && d < bd)
+    ) return null
+
+    let years = y - by
+    let months = m - bm
+    let days = d - bd
+
+    if (days < 0) {
+        // pedir prestado del mes anterior
+        const prevMonthIndex = (m - 1 + 12) % 12
+        const prevMonthYear = prevMonthIndex === 11 ? y - 1 : y
+        days += daysInMonthUTC(prevMonthYear, prevMonthIndex)
+        months -= 1
+    }
+
+    if (months < 0) {
+        months += 12
+        years -= 1
+    }
+
+    const yearsDecimal = years + months / 12 + days / 365.2425
+    return { years, months, days, yearsDecimal }
+}
+
 /**
  * Parses the Excel file for document submission.
  * Expected columns: NOMBRE COMPLETO, CÉDULA, CORREO, TELÉFONO, ENTREGÓ PAPELES
@@ -169,6 +270,8 @@ export const importPapelesFromExcel = async (file, existingData = []) => {
                     cedula: ['cédula', 'cedula', 'identificacion', 'documento', 'cc', 'ti', 'id', 'nro', 'numero'],
                     correo: ['correo', 'email', 'e-mail'],
                     telefono: ['teléfono', 'telefono', 'celular', 'tel'],
+                    fecha_nacimiento: ['fecha nacimiento', 'nacimiento', 'f. nacimiento', 'fecha de nacimiento', 'fnac', 'f_nac'],
+                    semestre: ['semestre', 'sem'],
                     residencia: ['residencia', 'barrio', 'direccion', 'dirección'],
                     destino: ['destino', 'lugar'],
                     universidad: ['universidad', 'u', 'estudio', 'institucion'],
@@ -284,6 +387,8 @@ export const importPapelesFromExcel = async (file, existingData = []) => {
                         cedula: String(cedula),
                         correo: String(row[columnMap['correo']] || '').trim().toLowerCase(),
                         telefono: String(row[columnMap['telefono']] || '').trim(),
+                        fecha_nacimiento: String(row[columnMap['fecha_nacimiento']] || '').trim(),
+                        semestre: String(row[columnMap['semestre']] || '').trim(),
                         residencia: String(row[columnMap['residencia']] || '').trim(),
                         destino: String(row[columnMap['destino']] || '').trim(),
                         universidad: String(row[columnMap['universidad']] || '').trim(),
@@ -338,6 +443,8 @@ export const importPapelesFromExcel = async (file, existingData = []) => {
  */
 export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) => {
     const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema de Entregas'
+    workbook.created = new Date()
     
     const columns = [
         { header: 'No.', key: 'idx', width: 8 },
@@ -345,6 +452,9 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
         { header: 'CÉDULA', key: 'cedula', width: 20 },
         { header: 'CORREO', key: 'correo', width: 30 },
         { header: 'TELÉFONO', key: 'telefono', width: 20 },
+        { header: 'FECHA NACIMIENTO', key: 'fecha_nacimiento', width: 18 },
+        { header: 'EDAD', key: 'edad', width: 14 },
+        { header: 'SEMESTRE', key: 'semestre', width: 12 },
         { header: 'RESIDENCIA', key: 'residencia', width: 25 },
         { header: 'DESTINO', key: 'destino', width: 25 },
         { header: 'UNIVERSIDAD', key: 'universidad', width: 25 },
@@ -379,7 +489,43 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
         if (cleanFormat) {
             currentColumns = currentColumns.filter(col => col.key !== 'novedad_observacion');
         }
-        sheet.columns = currentColumns;
+        // Definir columnas sin header para usar un encabezado tipo reporte.
+        sheet.columns = currentColumns.map(c => ({ key: c.key, width: c.width }));
+
+        const totalCols = currentColumns.length
+        const HEADER_ROW = 5
+
+        // Encabezado tipo reporte (filas 1-4)
+        sheet.mergeCells(1, 1, 1, totalCols)
+        sheet.getCell(1, 1).value = 'REPORTE DE DOCUMENTACIÓN — ENTREGA DE PAPELES'
+        styleSummaryCell(sheet.getCell(1, 1), { bold: true, bgColor: colorHex, textColor: 'FFFFFFFF', size: 16, halign: 'center' })
+        sheet.getRow(1).height = 28
+
+        sheet.mergeCells(2, 1, 2, totalCols)
+        sheet.getCell(2, 1).value = 'Alcaldía Municipal — Programa de Beneficio'
+        styleSummaryCell(sheet.getCell(2, 1), { bold: true, bgColor: 'FFF8FAFC', textColor: 'FF0F172A', size: 11, halign: 'center' })
+        sheet.getRow(2).height = 18
+
+        sheet.mergeCells(3, 1, 3, totalCols)
+        sheet.getCell(3, 1).value = `Fecha de generación: ${new Date().toLocaleString('es-CO')}${fechaEntrega ? `  |  Fecha de entrega: ${formatFechaCorta(fechaEntrega)}` : ''}`
+        styleSummaryCell(sheet.getCell(3, 1), { bgColor: 'FFF8FAFC', textColor: 'FF334155', size: 10, halign: 'center' })
+        sheet.getRow(3).height = 18
+
+        sheet.mergeCells(4, 1, 4, totalCols)
+        sheet.getCell(4, 1).value = ''
+        sheet.getRow(4).height = 8
+
+        // Header real de tabla (fila 5)
+        const headerRow = sheet.getRow(HEADER_ROW)
+        currentColumns.forEach((col, idx) => {
+            const cell = headerRow.getCell(idx + 1)
+            cell.value = col.header
+            styleHeaderCell(cell, { bgColor: colorHex })
+        })
+        headerRow.height = 20
+
+        // Congelar encabezados
+        sheet.views = [{ state: 'frozen', ySplit: HEADER_ROW, xSplit: 0 }]
 
         // Añadir datos
         list.forEach((item, i) => {
@@ -389,6 +535,7 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
             ].filter(Boolean).length;
             
             const totalMensualReal = calcularTotalMensual(item, fechaEntrega);
+            const edad = calcularEdadExacta(item.fecha_nacimiento)
 
             const rowData = {
                 idx: i + 1,
@@ -396,6 +543,9 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
                 cedula: item.cedula,
                 correo: item.correo,
                 telefono: item.telefono,
+                fecha_nacimiento: item.fecha_nacimiento || '',
+                edad: edad ? `${edad.years}a ${edad.months}m ${edad.days}d` : '',
+                semestre: item.semestre ?? '',
                 residencia: (item.residencia || '').toUpperCase(),
                 destino: (item.destino || '').toUpperCase(),
                 universidad: (item.universidad || '').toUpperCase(),
@@ -484,37 +634,16 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
             });
         });
 
-        // Estilo del Header
-        const headerRow = sheet.getRow(1);
-        headerRow.eachCell((cell) => {
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: colorHex }
-            };
-            cell.font = {
-                bold: true,
-                color: { argb: 'FFFFFFFF' },
-                size: 12
-            };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-        });
-
         // --- RESUMEN TOTAL MENSUAL (hojas proveedor) ---
         let summaryRowsUsed = 0;
         if (monthlySummary && list.length > 0) {
-            summaryRowsUsed = appendProveedorMonthlySummary(sheet, list, fechaEntrega, colorHex, currentColumns.length);
+            const startRow = HEADER_ROW + list.length + 2
+            summaryRowsUsed = appendProveedorMonthlySummary(sheet, list, fechaEntrega, colorHex, startRow);
         }
 
         // --- AGREGAR LEYENDA DE COLORES AL FINAL ---
         if (!cleanFormat) {
-            const lastDataRow = list.length + 1;
+            const lastDataRow = HEADER_ROW + list.length;
             const legendStartRow = lastDataRow + 3 + (summaryRowsUsed > 0 ? summaryRowsUsed + 1 : 0);
 
             const legendData = [
@@ -553,7 +682,7 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
         }
 
         // Auto-ajustar ancho de columnas basado en el contenido
-        sheet.columns.forEach(column => {
+        sheet.columns.forEach((column, idx) => {
             let maxColumnLength = 0;
             column.eachCell({ includeEmpty: true }, cell => {
                 const columnLength = cell.value ? cell.value.toString().length : 0;
@@ -561,7 +690,9 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
                     maxColumnLength = columnLength;
                 }
             });
-            column.width = maxColumnLength < 10 ? 10 : maxColumnLength + 5;
+            const baseWidth = currentColumns[idx]?.width || column.width || 10
+            const computed = maxColumnLength < 10 ? 10 : Math.min(60, maxColumnLength + 3)
+            column.width = Math.max(baseWidth, computed)
         });
 
         // Encontrar la columna 'universidad' para aplicar el filtro hasta ahí
@@ -570,8 +701,8 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
 
         // Agregar filtro automático a las columnas de información principal (excluyendo días y totales)
         sheet.autoFilter = {
-            from: { row: 1, column: 1 },
-            to: { row: list.length === 0 ? 1 : list.length + 1, column: finalFilterCol }
+            from: { row: HEADER_ROW, column: 1 },
+            to: { row: list.length === 0 ? HEADER_ROW : HEADER_ROW + list.length, column: finalFilterCol }
         };
     };
 
@@ -605,6 +736,22 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
     if (nuevos.length > 0) addSheet('REGISTROS NUEVOS', nuevos, 'FF388E3C'); // Verde oscuro
     if (conObservacion.length > 0) addSheet('OBSERVACIONES MANUALES', conObservacion, 'FFFFA726'); // Naranja
     if (resumenNovedades.length > 0) addSheet('RESUMEN NOVEDADES', resumenNovedades, 'FFE65100'); // Naranja oscuro
+
+    // Logo en el encabezado (opcional): colocar un archivo en /public con nombre logo.png / logo-alcaldia.png / etc.
+    const logo = await tryLoadLogoForExcel()
+    if (logo) {
+        const imageId = workbook.addImage({ buffer: logo.buffer, extension: logo.extension })
+        workbook.worksheets.forEach(ws => {
+            try {
+                ws.addImage(imageId, {
+                    tl: { col: Math.max(0, ws.columnCount - 2.2), row: 0.2 },
+                    ext: { width: 140, height: 60 }
+                })
+            } catch {
+                // ignore
+            }
+        })
+    }
 
     // Generar archivo
     const buffer = await workbook.xlsx.writeBuffer();

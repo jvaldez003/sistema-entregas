@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { importPapelesFromExcel, exportPapelesToExcel, exportContactosToCSV } from '../services/papelesService'
+import { importPapelesFromExcel, exportPapelesToExcel, exportContactosToCSV, calcularEdadExacta } from '../services/papelesService'
 import { exportAsistenciaToExcel, exportAsistenciaToPDF, getColombianHolidays } from '../services/asistenciaExportService'
 import Select, { components } from 'react-select'
 import CreatableSelect from 'react-select/creatable'
@@ -243,6 +243,8 @@ export default function EntregaPapelesPage() {
         cedula: '',
         correo: '',
         telefono: '',
+        fecha_nacimiento: '',
+        semestre: '',
         sisben: '',
         residencia: '',
         destino: '',
@@ -481,6 +483,7 @@ export default function EntregaPapelesPage() {
         setSelectedItem(null)
         setFormData({
             nombre_completo: '', cedula: '', correo: '', telefono: '',
+            fecha_nacimiento: '', semestre: '',
             sisben: '',
             residencia: '', destino: '', universidad: '', horario: '', ruta: '',
             dia_lunes: false, dia_martes: false, dia_miercoles: false,
@@ -500,6 +503,8 @@ export default function EntregaPapelesPage() {
             cedula: '',
             correo: '',
             telefono: '',
+            fecha_nacimiento: '',
+            semestre: '',
             sisben: item.sisben || '',
             residencia: item.residencia || '',
             destino: item.destino || '',
@@ -530,6 +535,8 @@ export default function EntregaPapelesPage() {
             cedula: item.cedula,
             correo: item.correo || '',
             telefono: item.telefono || '',
+            fecha_nacimiento: item.fecha_nacimiento || '',
+            semestre: item.semestre ?? '',
             sisben: item.sisben || '',
             residencia: item.residencia || '',
             destino: item.destino || '',
@@ -568,13 +575,29 @@ export default function EntregaPapelesPage() {
             return alert('Nombre y Cédula son obligatorios')
         }
 
+        const sem = formData.semestre === '' || formData.semestre === null || formData.semestre === undefined
+            ? null
+            : Number(formData.semestre)
+        if (sem !== null && (!Number.isFinite(sem) || sem < 1 || sem > 12 || !Number.isInteger(sem))) {
+            return alert('El semestre debe ser un número entero entre 1 y 12.')
+        }
+
+        const edad = formData.fecha_nacimiento ? calcularEdadExacta(formData.fecha_nacimiento) : null
+        if (edad && edad.years > 29) {
+            alert('⚠️ Atención: Esta persona tiene más de 29 años y se pasa de la edad para el beneficio.')
+        }
+
         setSubmitting(true)
         try {
+            const payload = {
+                ...formData,
+                semestre: sem,
+            }
             if (modalMode === 'add') {
                 const { error } = await supabase
                     .from('entrega_papeles')
                     .insert([{
-                        ...formData,
+                        ...payload,
                         nombre_completo: formData.nombre_completo.toUpperCase(),
                         estado_entrega: 'NO ENTREGÓ'
                     }])
@@ -584,7 +607,7 @@ export default function EntregaPapelesPage() {
                 const { error } = await supabase
                     .from('entrega_papeles')
                     .update({
-                        ...formData,
+                        ...payload,
                         nombre_completo: formData.nombre_completo.toUpperCase(),
                         estado_entrega: 'NO ENTREGÓ',
                         is_replacement: true
@@ -609,7 +632,7 @@ export default function EntregaPapelesPage() {
                 const { error } = await supabase
                     .from('entrega_papeles')
                     .update({
-                        ...formData,
+                        ...payload,
                         nombre_completo: formData.nombre_completo.toUpperCase(),
                         days_added_later: selectedItem.days_added_later || daysAddedLater
                     })
@@ -897,6 +920,37 @@ export default function EntregaPapelesPage() {
                                         value={formData.telefono}
                                         onChange={e => setFormData({...formData, telefono: e.target.value})}
                                         placeholder="Número de contacto"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Fecha de Nacimiento (Opcional)</label>
+                                    <input
+                                        type="date"
+                                        value={formData.fecha_nacimiento || ''}
+                                        onChange={e => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
+                                    />
+                                    {(() => {
+                                        const edad = formData.fecha_nacimiento ? calcularEdadExacta(formData.fecha_nacimiento) : null
+                                        if (!edad) return null
+                                        const over = edad.years > 29
+                                        return (
+                                            <div className={`${styles.helperLine} ${over ? styles.helperWarn : ''}`}>
+                                                Edad: <strong>{edad.years}</strong> años, {edad.months} meses, {edad.days} días
+                                                {over ? <span className={styles.overAgeBadge}>⚠️ +29 (fuera de beneficio)</span> : null}
+                                            </div>
+                                        )
+                                    })()}
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Semestre (1–12) (Opcional)</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="12"
+                                        step="1"
+                                        value={formData.semestre ?? ''}
+                                        onChange={e => setFormData({ ...formData, semestre: e.target.value })}
+                                        placeholder="Ej: 3"
                                     />
                                 </div>
                                 <div className={styles.formGroup}>
@@ -1353,6 +1407,7 @@ export default function EntregaPapelesPage() {
                                     <th style={{ width: 50 }}>No.</th>
                                     <th>Nombre Completo</th>
                                     <th>Cédula</th>
+                                    <th>Edad / Semestre</th>
                                     <th>Correo / Tel</th>
                                     <th>Universidad</th>
                                     <th>Ruta</th>
@@ -1370,12 +1425,23 @@ export default function EntregaPapelesPage() {
                                         item.dia_jueves, item.dia_viernes, item.dia_sabado
                                     ].filter(Boolean).length;
                                     const totalMensual = totalSemanal * 4;
+                                    const edad = item.fecha_nacimiento ? calcularEdadExacta(item.fecha_nacimiento) : null
+                                    const over = !!edad && edad.years > 29
 
                                     return (
                                     <tr key={item.id}>
                                         <td>{idx + 1}</td>
                                         <td style={{ fontWeight: 600 }}>{item.nombre_completo}</td>
                                         <td>{item.cedula}</td>
+                                        <td style={{ fontSize: 13, lineHeight: '1.35' }}>
+                                            <div className={over ? styles.overAgeText : undefined}>
+                                                {edad ? `${edad.years}a ${edad.months}m ${edad.days}d` : '—'}
+                                                {over ? <span className={styles.overAgeDot} title="Más de 29 años"> </span> : null}
+                                            </div>
+                                            <div style={{ color: 'var(--text3)' }}>
+                                                Sem: {item.semestre ? item.semestre : '—'}
+                                            </div>
+                                        </td>
                                         <td style={{ fontSize: 13, lineHeight: '1.4' }}>
                                             <div style={{ color: 'var(--text3)' }}>{item.correo || '—'}</div>
                                             <div>{item.telefono || '—'}</div>
