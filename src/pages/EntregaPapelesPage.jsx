@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { importPapelesFromExcel, exportPapelesToExcel, exportContactosToCSV, calcularEdadExacta } from '../services/papelesService'
+import { importPapelesFromExcel, exportPapelesToExcel, exportContactosToCSV, calcularEdadExacta, resolverTarifaOficial } from '../services/papelesService'
 import { exportAsistenciaToExcel, exportAsistenciaToPDF, getColombianHolidays } from '../services/asistenciaExportService'
 import Select, { components } from 'react-select'
 import CreatableSelect from 'react-select/creatable'
@@ -296,10 +296,38 @@ export default function EntregaPapelesPage() {
             console.error('Error cargando datos:', error)
             setError('No se pudo cargar la tabla. Asegúrate de haber ejecutado el SQL en Supabase.')
         } else {
-            setData(data || [])
-            guardarSnapshotMesAnterior(data || [])
+            const rows = data || []
+            setData(rows)
+            guardarSnapshotMesAnterior(rows)
+            sincronizarTarifasOficiales(rows)
         }
         setLoading(false)
+    }
+
+    async function sincronizarTarifasOficiales(beneficiarios) {
+        if (!beneficiarios?.length) return
+        const updates = []
+        for (const item of beneficiarios) {
+            const tarifa = resolverTarifaOficial(item.residencia, item.destino)
+            if (!tarifa) continue
+            const ida = String(item.valor_ida || '').replace(/[^\d]/g, '')
+            const regreso = String(item.valor_regreso || '').replace(/[^\d]/g, '')
+            if (ida === tarifa && regreso === tarifa) continue
+            updates.push({ id: item.id, valor_ida: tarifa, valor_regreso: tarifa })
+        }
+        if (!updates.length) return
+
+        // Actualizar en lote (uno a uno para no pisar otros campos)
+        const results = await Promise.all(updates.map(u =>
+            supabase.from('entrega_papeles').update({ valor_ida: u.valor_ida, valor_regreso: u.valor_regreso }).eq('id', u.id)
+        ))
+        const failed = results.some(r => r.error)
+        if (!failed) {
+            setData(prev => prev.map(item => {
+                const u = updates.find(x => x.id === item.id)
+                return u ? { ...item, valor_ida: u.valor_ida, valor_regreso: u.valor_regreso } : item
+            }))
+        }
     }
 
     async function guardarSnapshotMesAnterior(beneficiarios) {
@@ -551,9 +579,9 @@ export default function EntregaPapelesPage() {
             dia_sabado: !!item.dia_sabado,
             novedad_observacion: item.novedad_observacion || '',
             ruta_ida: item.ruta_ida || '',
-            valor_ida: item.valor_ida || '',
+            valor_ida: resolverTarifaOficial(item.residencia, item.destino) || item.valor_ida || '',
             ruta_regreso: item.ruta_regreso || '',
-            valor_regreso: item.valor_regreso || '',
+            valor_regreso: resolverTarifaOficial(item.residencia, item.destino) || item.valor_regreso || '',
             is_new: !!item.is_new
         })
         setShowFormModal(true)
@@ -561,6 +589,10 @@ export default function EntregaPapelesPage() {
 
     function findPriceForRoute(res, dest) {
         if (!res || !dest) return null;
+        // Prioridad: tarifario oficial
+        const oficial = resolverTarifaOficial(res, dest)
+        if (oficial) return oficial
+        // Si no está en el tarifario, conservar el valor ya usado en otros registros
         const match = data.find(item => 
             (item.residencia || '').toUpperCase() === res.toUpperCase() && 
             (item.destino || '').toUpperCase() === dest.toUpperCase() &&
@@ -583,8 +615,8 @@ export default function EntregaPapelesPage() {
         }
 
         const edad = formData.fecha_nacimiento ? calcularEdadExacta(formData.fecha_nacimiento) : null
-        if (edad && edad.years > 29) {
-            alert('⚠️ Atención: Esta persona tiene más de 29 años y se pasa de la edad para el beneficio.')
+        if (edad && edad.years >= 29) {
+            alert('⚠️ Atención: Esta persona tiene 29 años o más y no aplica para generar tickets / beneficio por edad.')
         }
 
         setSubmitting(true)
@@ -758,7 +790,7 @@ export default function EntregaPapelesPage() {
                             </div>
 
                             <div style={{ padding: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', fontSize: '13px', color: '#92400e' }}>
-                                ℹ️ El archivo incluirá colores corporativos, bordes y columnas auto-ajustadas. Las hojas <strong>Proveedor Tickets</strong> incluyen un resumen total mensual al final (tickets, valores y gran total).
+                                ℹ️ El archivo incluye 2 pestañas principales: <strong>COMPLETO</strong> (todo el detalle) y <strong>PROVEEDOR TICKETS</strong> (solo columnas del proveedor). En el proveedor <strong>no aparecen</strong> personas con 29 años o más. Todas las columnas tienen filtro.
                             </div>
                         </div>
                         <div className={styles.modalFooter}>
@@ -932,11 +964,11 @@ export default function EntregaPapelesPage() {
                                     {(() => {
                                         const edad = formData.fecha_nacimiento ? calcularEdadExacta(formData.fecha_nacimiento) : null
                                         if (!edad) return null
-                                        const over = edad.years > 29
+                                        const over = edad.years >= 29
                                         return (
                                             <div className={`${styles.helperLine} ${over ? styles.helperWarn : ''}`}>
                                                 Edad: <strong>{edad.years}</strong> años, {edad.months} meses, {edad.days} días
-                                                {over ? <span className={styles.overAgeBadge}>⚠️ +29 (fuera de beneficio)</span> : null}
+                                                {over ? <span className={styles.overAgeBadge}>⚠️ 29+ (sin ticket)</span> : null}
                                             </div>
                                         )
                                     })()}
@@ -1426,7 +1458,7 @@ export default function EntregaPapelesPage() {
                                     ].filter(Boolean).length;
                                     const totalMensual = totalSemanal * 4;
                                     const edad = item.fecha_nacimiento ? calcularEdadExacta(item.fecha_nacimiento) : null
-                                    const over = !!edad && edad.years > 29
+                                    const over = !!edad && edad.years >= 29
 
                                     return (
                                     <tr key={item.id}>

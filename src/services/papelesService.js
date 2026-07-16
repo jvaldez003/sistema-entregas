@@ -9,6 +9,70 @@ function parseValorMoneda(val) {
     return Number.isNaN(n) ? 0 : n
 }
 
+/** Normaliza origen/destino para cruzar con el tarifario oficial. */
+export function normalizarLugarRuta(raw) {
+    if (!raw) return ''
+    let t = String(raw)
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[–—−]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    if (t === 'CABECERA MUNICIPAL' || t === 'CANDELARIA') return 'CANDELARIA'
+    if (t.includes('POBLADO') || t.includes('CAMPESTRE') || t.includes('COMUNIDAD CAMPESTRE')) return 'POBLADO CAMPESTRE'
+    if (t.includes('SAN JOAQUIN')) return 'SAN JOAQUIN'
+    if (t.includes('VILLAGORGONA')) return 'VILLAGORGONA'
+    if (t.includes('EL LAURO') || t === 'LAURO') return 'EL LAURO'
+    if (t.includes('PALMIRA')) return 'PALMIRA'
+    if (t === 'CALI' || t.startsWith('CALI ') || t.includes('TIPLE CALI')) return 'CALI'
+    if (t.includes('CANDELARIA')) return 'CANDELARIA'
+    return t
+}
+
+/**
+ * Tarifario oficial transporte universitario (valor unitario ida/regreso).
+ * Las rutas que no estén aquí se dejan como están.
+ */
+export const TARIFAS_RUTAS_OFICIALES = {
+    'CANDELARIA|CALI': 7750,
+    'CANDELARIA|PALMIRA': 6650,
+    'VILLAGORGONA|CALI': 5000,
+    'VILLAGORGONA|PALMIRA': 7250,
+    'POBLADO CAMPESTRE|CALI': 4150,
+    'POBLADO CAMPESTRE|PALMIRA': 8300,
+    'SAN JOAQUIN|CALI': 4300,
+    'SAN JOAQUIN|PALMIRA': 8550,
+    'EL LAURO|CALI': 8100,
+    'VILLAGORGONA|CANDELARIA': 3000,
+}
+
+/** Devuelve el valor oficial (string) o null si la ruta no está en el tarifario. */
+export function resolverTarifaOficial(residencia, destino) {
+    const origen = normalizarLugarRuta(residencia)
+    const dest = normalizarLugarRuta(destino)
+    if (!origen || !dest) return null
+    const precio = TARIFAS_RUTAS_OFICIALES[`${origen}|${dest}`]
+    return precio != null ? String(precio) : null
+}
+
+/** Aplica tarifas oficiales a un registro; si no hay match, conserva valores actuales. */
+export function aplicarTarifaOficialAItem(item) {
+    if (!item) return item
+    const tarifa = resolverTarifaOficial(item.residencia, item.destino)
+    if (!tarifa) return item
+    return {
+        ...item,
+        valor_ida: tarifa,
+        valor_regreso: tarifa,
+    }
+}
+
+export function aplicarTarifasOficiales(list = []) {
+    return (list || []).map(aplicarTarifaOficialAItem)
+}
+
 const SISBEN_VALIDOS = new Set([
     'Sin SISBEN',
     'A1','A2','A3','A4','A5',
@@ -18,6 +82,19 @@ const SISBEN_VALIDOS = new Set([
     'D01','D02','D03','D04','D05','D06','D07','D08','D09','D10',
     'D11','D12','D13','D14','D15','D16','D17','D18','D19','D20','D21'
 ])
+
+/** Unifica guiones/espacios para que el filtro de Excel no muestre duplicados. */
+function normalizarTextoParaExcel(raw) {
+    if (!raw) return ''
+    return String(raw)
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // quitar tildes para unificar
+        .replace(/[–—−‐‑]/g, '-') // en-dash, em-dash, minus → guion normal
+        .replace(/\s*-\s*/g, ' - ')
+        .replace(/\s+/g, ' ')
+        .trim()
+}
 
 function normalizarSisben(raw) {
     if (!raw) return ''
@@ -147,35 +224,9 @@ function appendProveedorMonthlySummary(sheet, list, fechaEntrega, accentColor, s
     return nextRow - startRow
 }
 
-async function tryLoadLogoForExcel() {
-    // Si el usuario agrega un logo en /public con alguno de estos nombres,
-    // el Excel lo insertará automáticamente en el encabezado.
-    const candidates = [
-        { url: '/logo.png', ext: 'png' },
-        { url: '/logo-alcaldia.png', ext: 'png' },
-        { url: '/alcaldia.png', ext: 'png' },
-        { url: '/escudo.png', ext: 'png' },
-        { url: '/logo.jpg', ext: 'jpeg' },
-        { url: '/logo.jpeg', ext: 'jpeg' }
-    ]
-
-    for (const c of candidates) {
-        try {
-            const res = await fetch(c.url)
-            if (!res.ok) continue
-            const buf = await res.arrayBuffer()
-            if (!buf || buf.byteLength === 0) continue
-            return { buffer: buf, extension: c.ext }
-        } catch {
-            // continuar
-        }
-    }
-    return null
-}
-
 function styleHeaderCell(cell, { bgColor, textColor = 'FFFFFFFF', bold = true } = {}) {
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } }
-    cell.font = { bold, color: { argb: textColor }, size: 12 }
+    cell.font = { bold, color: { argb: textColor }, size: 10 }
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
     cell.border = {
         top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -416,16 +467,22 @@ export const importPapelesFromExcel = async (file, existingData = []) => {
                         itemData.ruta_regreso = `${destNorm} - ${resNorm}`;
                     }
 
-                    // Auto-completar valores faltantes desde la base de datos local (existingData)
-                    if (!itemData.valor_ida && itemData.residencia && itemData.destino) {
-                        const match = existingData.find(d => 
-                            (d.residencia || '').toUpperCase() === itemData.residencia.toUpperCase() &&
-                            (d.destino || '').toUpperCase() === itemData.destino.toUpperCase() &&
-                            d.valor_ida
-                        );
-                        if (match) {
-                            itemData.valor_ida = match.valor_ida;
-                            itemData.valor_regreso = match.valor_regreso || match.valor_ida;
+                    // Auto-completar valores: tarifario oficial primero; si no, existingData
+                    if (itemData.residencia && itemData.destino) {
+                        const oficial = resolverTarifaOficial(itemData.residencia, itemData.destino)
+                        if (oficial) {
+                            itemData.valor_ida = oficial
+                            itemData.valor_regreso = oficial
+                        } else if (!itemData.valor_ida) {
+                            const match = existingData.find(d => 
+                                (d.residencia || '').toUpperCase() === itemData.residencia.toUpperCase() &&
+                                (d.destino || '').toUpperCase() === itemData.destino.toUpperCase() &&
+                                d.valor_ida
+                            );
+                            if (match) {
+                                itemData.valor_ida = match.valor_ida;
+                                itemData.valor_regreso = match.valor_regreso || match.valor_ida;
+                            }
                         }
                     }
 
@@ -445,86 +502,97 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Sistema de Entregas'
     workbook.created = new Date()
+
+    // Aplicar tarifario oficial a las rutas conocidas; el resto se deja igual
+    const dataConTarifas = aplicarTarifasOficiales(data)
     
-    const columns = [
-        { header: 'No.', key: 'idx', width: 8 },
-        { header: 'NOMBRE COMPLETO', key: 'nombre', width: 40 },
-        { header: 'CÉDULA', key: 'cedula', width: 20 },
-        { header: 'CORREO', key: 'correo', width: 30 },
-        { header: 'TELÉFONO', key: 'telefono', width: 20 },
-        { header: 'FECHA NACIMIENTO', key: 'fecha_nacimiento', width: 18 },
+    const columnsFull = [
+        { header: 'No.', key: 'idx', width: 5 },
+        { header: 'NOMBRE COMPLETO', key: 'nombre', width: 32 },
+        { header: 'CÉDULA', key: 'cedula', width: 14 },
+        { header: 'CORREO', key: 'correo', width: 28 },
+        { header: 'TELÉFONO', key: 'telefono', width: 14 },
+        { header: 'FECHA NACIMIENTO', key: 'fecha_nacimiento', width: 16 },
         { header: 'EDAD', key: 'edad', width: 14 },
-        { header: 'SEMESTRE', key: 'semestre', width: 12 },
-        { header: 'RESIDENCIA', key: 'residencia', width: 25 },
-        { header: 'DESTINO', key: 'destino', width: 25 },
-        { header: 'UNIVERSIDAD', key: 'universidad', width: 25 },
-        { header: 'SISBEN', key: 'sisben', width: 15 },
-        // { header: 'HORARIO', key: 'horario', width: 20 },
-        // { header: 'RUTA', key: 'ruta', width: 15 },
-        { header: 'LUNES', key: 'dia_lunes', width: 10 },
-        { header: 'MARTES', key: 'dia_martes', width: 10 },
-        { header: 'MIERCOLES', key: 'dia_miercoles', width: 12 },
-        { header: 'JUEVES', key: 'dia_jueves', width: 10 },
-        { header: 'VIERNES', key: 'dia_viernes', width: 10 },
-        { header: 'SABADO', key: 'dia_sabado', width: 10 },
-        { header: 'TOTAL SEMANAL', key: 'total_semanal', width: 15 },
-        { header: 'TOTAL MENSUAL', key: 'total_mensual', width: 15 },
-        { header: 'ENTREGÓ PAPELES', key: 'estado', width: 25 },
-        { header: 'RECOGIÓ TICKET', key: 'recogio_ticket', width: 18 },
-        { header: 'NOVEDADES / OBSERVACIONES', key: 'novedad_observacion', width: 40 },
-        { header: 'IDA', key: 'ruta_ida', width: 25 },
-        { header: 'VALOR IDA', key: 'valor_ida', width: 15 },
-        { header: 'REGRESO', key: 'ruta_regreso', width: 25 },
-        { header: 'VALOR REGRESO', key: 'valor_regreso', width: 15 }
+        { header: 'SEMESTRE', key: 'semestre', width: 10 },
+        { header: 'RESIDENCIA', key: 'residencia', width: 18 },
+        { header: 'DESTINO', key: 'destino', width: 14 },
+        { header: 'UNIVERSIDAD', key: 'universidad', width: 28 },
+        { header: 'SISBEN', key: 'sisben', width: 12 },
+        { header: 'LUNES', key: 'dia_lunes', width: 8 },
+        { header: 'MARTES', key: 'dia_martes', width: 9 },
+        { header: 'MIERCOLES', key: 'dia_miercoles', width: 11 },
+        { header: 'JUEVES', key: 'dia_jueves', width: 9 },
+        { header: 'VIERNES', key: 'dia_viernes', width: 9 },
+        { header: 'SABADO', key: 'dia_sabado', width: 9 },
+        { header: 'TOTAL SEMANAL', key: 'total_semanal', width: 12 },
+        { header: 'TOTAL MENSUAL', key: 'total_mensual', width: 12 },
+        { header: 'ENTREGÓ PAPELES', key: 'estado', width: 16 },
+        { header: 'RECOGIÓ TICKET', key: 'recogio_ticket', width: 14 },
+        { header: 'NOVEDADES / OBSERVACIONES', key: 'novedad_observacion', width: 35 },
+        { header: 'IDA', key: 'ruta_ida', width: 22 },
+        { header: 'VALOR IDA', key: 'valor_ida', width: 12 },
+        { header: 'REGRESO', key: 'ruta_regreso', width: 22 },
+        { header: 'VALOR REGRESO', key: 'valor_regreso', width: 13 }
+    ];
+
+    // Solo lo que se entrega al proveedor de tickets
+    const columnsProveedor = [
+        { header: 'No.', key: 'idx', width: 5 },
+        { header: 'NOMBRE COMPLETO', key: 'nombre', width: 32 },
+        { header: 'CÉDULA', key: 'cedula', width: 14 },
+        { header: 'CORREO', key: 'correo', width: 28 },
+        { header: 'TELÉFONO', key: 'telefono', width: 14 },
+        { header: 'RESIDENCIA', key: 'residencia', width: 18 },
+        { header: 'DESTINO', key: 'destino', width: 14 },
+        { header: 'UNIVERSIDAD', key: 'universidad', width: 28 },
+        { header: 'LUNES', key: 'dia_lunes', width: 8 },
+        { header: 'MARTES', key: 'dia_martes', width: 9 },
+        { header: 'MIERCOLES', key: 'dia_miercoles', width: 11 },
+        { header: 'JUEVES', key: 'dia_jueves', width: 9 },
+        { header: 'VIERNES', key: 'dia_viernes', width: 9 },
+        { header: 'SABADO', key: 'dia_sabado', width: 9 },
+        { header: 'TOTAL SEMANAL', key: 'total_semanal', width: 12 },
+        { header: 'TOTAL MENSUAL', key: 'total_mensual', width: 12 },
+        { header: 'IDA', key: 'ruta_ida', width: 22 },
+        { header: 'VALOR IDA', key: 'valor_ida', width: 12 },
+        { header: 'REGRESO', key: 'ruta_regreso', width: 22 },
+        { header: 'VALOR REGRESO', key: 'valor_regreso', width: 13 }
     ];
 
     const addSheet = (name, list, colorHex, options = {}) => {
-        const { includeEstado = true, cleanFormat = false, monthlySummary = false } = options;
+        const {
+            includeEstado = true,
+            cleanFormat = false,
+            monthlySummary = false,
+            columnSet = 'full',
+        } = options;
         const sheet = workbook.addWorksheet(name);
         
-        let currentColumns = columns;
-        if (!includeEstado) {
-            currentColumns = currentColumns.filter(col => col.key !== 'estado');
+        let currentColumns = columnSet === 'proveedor' ? [...columnsProveedor] : [...columnsFull];
+        if (columnSet !== 'proveedor') {
+            if (!includeEstado) {
+                currentColumns = currentColumns.filter(col => col.key !== 'estado');
+            }
+            if (cleanFormat) {
+                currentColumns = currentColumns.filter(col => col.key !== 'novedad_observacion');
+            }
         }
-        if (cleanFormat) {
-            currentColumns = currentColumns.filter(col => col.key !== 'novedad_observacion');
-        }
-        // Definir columnas sin header para usar un encabezado tipo reporte.
+        // Definir columnas sin header; la fila 1 será el encabezado de columnas.
         sheet.columns = currentColumns.map(c => ({ key: c.key, width: c.width }));
 
-        const totalCols = currentColumns.length
-        const HEADER_ROW = 5
+        const HEADER_ROW = 1
 
-        // Encabezado tipo reporte (filas 1-4)
-        sheet.mergeCells(1, 1, 1, totalCols)
-        sheet.getCell(1, 1).value = 'REPORTE DE DOCUMENTACIÓN — ENTREGA DE PAPELES'
-        styleSummaryCell(sheet.getCell(1, 1), { bold: true, bgColor: colorHex, textColor: 'FFFFFFFF', size: 16, halign: 'center' })
-        sheet.getRow(1).height = 28
-
-        sheet.mergeCells(2, 1, 2, totalCols)
-        sheet.getCell(2, 1).value = 'Alcaldía Municipal — Programa de Beneficio'
-        styleSummaryCell(sheet.getCell(2, 1), { bold: true, bgColor: 'FFF8FAFC', textColor: 'FF0F172A', size: 11, halign: 'center' })
-        sheet.getRow(2).height = 18
-
-        sheet.mergeCells(3, 1, 3, totalCols)
-        sheet.getCell(3, 1).value = `Fecha de generación: ${new Date().toLocaleString('es-CO')}${fechaEntrega ? `  |  Fecha de entrega: ${formatFechaCorta(fechaEntrega)}` : ''}`
-        styleSummaryCell(sheet.getCell(3, 1), { bgColor: 'FFF8FAFC', textColor: 'FF334155', size: 10, halign: 'center' })
-        sheet.getRow(3).height = 18
-
-        sheet.mergeCells(4, 1, 4, totalCols)
-        sheet.getCell(4, 1).value = ''
-        sheet.getRow(4).height = 8
-
-        // Header real de tabla (fila 5)
+        // Encabezado de columnas (fila 1)
         const headerRow = sheet.getRow(HEADER_ROW)
         currentColumns.forEach((col, idx) => {
             const cell = headerRow.getCell(idx + 1)
             cell.value = col.header
             styleHeaderCell(cell, { bgColor: colorHex })
         })
-        headerRow.height = 20
+        headerRow.height = 22
 
-        // Congelar encabezados
+        // Congelar encabezado de columnas
         sheet.views = [{ state: 'frozen', ySplit: HEADER_ROW, xSplit: 0 }]
 
         // Añadir datos
@@ -546,12 +614,12 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
                 fecha_nacimiento: item.fecha_nacimiento || '',
                 edad: edad ? `${edad.years}a ${edad.months}m ${edad.days}d` : '',
                 semestre: item.semestre ?? '',
-                residencia: (item.residencia || '').toUpperCase(),
-                destino: (item.destino || '').toUpperCase(),
-                universidad: (item.universidad || '').toUpperCase(),
+                residencia: normalizarTextoParaExcel(item.residencia),
+                destino: normalizarTextoParaExcel(item.destino),
+                universidad: normalizarTextoParaExcel(item.universidad),
                 sisben: item.sisben || '',
                 horario: item.horario || '',
-                ruta: (item.ruta || '').toUpperCase(),
+                ruta: normalizarTextoParaExcel(item.ruta),
                 dia_lunes: item.dia_lunes ? 'X' : '',
                 dia_martes: item.dia_martes ? 'X' : '',
                 dia_miercoles: item.dia_miercoles ? 'X' : '',
@@ -561,16 +629,16 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
                 total_semanal: totalSemanal > 0 ? totalSemanal : '',
                 total_mensual: totalMensualReal !== '' && totalMensualReal > 0 ? totalMensualReal : (totalSemanal > 0 ? (totalSemanal * 4) : ''),
                 recogio_ticket: ticketData[item.cedula] === false ? 'NO RECOGIÓ' : (ticketData[item.cedula] === true ? 'SÍ RECOGIÓ' : ''),
-                ruta_ida: (item.ruta_ida || '').toUpperCase(),
+                ruta_ida: normalizarTextoParaExcel(item.ruta_ida),
                 valor_ida: item.valor_ida || '',
-                ruta_regreso: (item.ruta_regreso || '').toUpperCase(),
+                ruta_regreso: normalizarTextoParaExcel(item.ruta_regreso),
                 valor_regreso: item.valor_regreso || ''
             };
 
-            if (includeEstado) {
+            if (includeEstado && columnSet !== 'proveedor') {
                 rowData.estado = item.estado_entrega;
             }
-            if (!cleanFormat) {
+            if (!cleanFormat && columnSet !== 'proveedor') {
                 rowData.novedad_observacion = item.novedad_observacion || '';
             }
 
@@ -580,7 +648,7 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
             let rowBgColor = null;
             let textColor = 'FF000000';
 
-            if (!cleanFormat) {
+            if (!cleanFormat && columnSet !== 'proveedor') {
                 if (item.is_replacement) {
                     rowBgColor = 'FFFFF9C4'; // Amarillo claro
                     textColor = 'FF856404';  // Marrón oscuro
@@ -605,30 +673,28 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
                 }
             }
 
-            // Aplicar estilos a cada celda de la fila recién creada
+            // Aplicar estilos a cada celda: todo centrado y acomodado
             row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                const colKey = currentColumns[colNumber - 1]?.key || '';
+                const wrap = colKey === 'novedad_observacion' || colKey === 'nombre' || colKey === 'universidad' || colKey === 'correo';
+
                 cell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
                     bottom: { style: 'thin' },
                     right: { style: 'thin' }
                 };
-                cell.alignment = { vertical: 'middle', wrapText: true };
-                
-                const colKey = currentColumns[colNumber - 1]?.key || '';
-                if (colKey === 'idx' || colKey === 'cedula' || colKey.startsWith('dia_') || colKey.startsWith('total_') || colKey === 'estado') {
-                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-                }
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: wrap };
+                cell.font = {
+                    ...(rowBgColor ? { color: { argb: textColor } } : {}),
+                    size: 10
+                };
 
                 if (rowBgColor) {
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
                         fgColor: { argb: rowBgColor }
-                    };
-                    cell.font = { 
-                        color: { argb: textColor },
-                        size: 11
                     };
                 }
             });
@@ -642,7 +708,7 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
         }
 
         // --- AGREGAR LEYENDA DE COLORES AL FINAL ---
-        if (!cleanFormat) {
+        if (!cleanFormat && columnSet !== 'proveedor') {
             const lastDataRow = HEADER_ROW + list.length;
             const legendStartRow = lastDataRow + 3 + (summaryRowsUsed > 0 ? summaryRowsUsed + 1 : 0);
 
@@ -681,77 +747,80 @@ export const exportPapelesToExcel = async (data, fechaEntrega, ticketData = {}) 
             });
         }
 
-        // Auto-ajustar ancho de columnas basado en el contenido
-        sheet.columns.forEach((column, idx) => {
-            let maxColumnLength = 0;
-            column.eachCell({ includeEmpty: true }, cell => {
-                const columnLength = cell.value ? cell.value.toString().length : 0;
-                if (columnLength > maxColumnLength) {
-                    maxColumnLength = columnLength;
-                }
-            });
-            const baseWidth = currentColumns[idx]?.width || column.width || 10
-            const computed = maxColumnLength < 10 ? 10 : Math.min(60, maxColumnLength + 3)
-            column.width = Math.max(baseWidth, computed)
+        // Auto-ajustar anchos SOLO con filas de datos (evita que el resumen ensanche "No.")
+        const lastDataRow = HEADER_ROW + Math.max(list.length, 0)
+        currentColumns.forEach((colDef, idx) => {
+            const col = sheet.getColumn(idx + 1)
+            let maxLen = String(colDef.header || '').length
+
+            for (let r = HEADER_ROW + 1; r <= lastDataRow; r++) {
+                const val = sheet.getRow(r).getCell(idx + 1).value
+                if (val == null || val === '') continue
+                maxLen = Math.max(maxLen, String(val).length)
+            }
+
+            if (colDef.key === 'idx') {
+                // Solo lo necesario para el número (ej. 1..999)
+                col.width = Math.max(4, Math.min(6, String(Math.max(list.length, 1)).length + 2))
+            } else if (colDef.key.startsWith('dia_')) {
+                col.width = Math.max(8, Math.min(11, maxLen + 1))
+            } else if (colDef.key === 'semestre' || colDef.key.startsWith('total_') || colDef.key.startsWith('valor_')) {
+                col.width = Math.max(10, Math.min(14, maxLen + 2))
+            } else if (colDef.key === 'novedad_observacion') {
+                col.width = Math.min(40, Math.max(20, maxLen + 2))
+            } else {
+                // Ajuste al texto, con tope razonable
+                col.width = Math.min(45, Math.max(colDef.width || 10, maxLen + 2))
+            }
         });
 
-        // Encontrar la columna 'universidad' para aplicar el filtro hasta ahí
-        const lastFilterColIndex = currentColumns.findIndex(col => col.key === 'universidad') + 1;
-        const finalFilterCol = lastFilterColIndex > 0 ? lastFilterColIndex : currentColumns.length;
-
-        // Agregar filtro automático a las columnas de información principal (excluyendo días y totales)
+        // Filtro automático en TODAS las columnas
         sheet.autoFilter = {
             from: { row: HEADER_ROW, column: 1 },
-            to: { row: list.length === 0 ? HEADER_ROW : HEADER_ROW + list.length, column: finalFilterCol }
+            to: { row: list.length === 0 ? HEADER_ROW : HEADER_ROW + list.length, column: currentColumns.length }
         };
     };
 
-    // Filtrar datos para el proveedor (solo los que tienen días de viaje asignados y destino)
-    const dataProveedor = data.filter(d => {
+    // Proveedor: con días y destino, y menores de 29 años (29 o más no generan ticket)
+    const dataProveedor = dataConTarifas.filter(d => {
         const tieneDias = d.dia_lunes || d.dia_martes || d.dia_miercoles || d.dia_jueves || d.dia_viernes || d.dia_sabado;
-        return tieneDias && d.destino && d.destino.trim() !== '';
+        if (!tieneDias || !d.destino || d.destino.trim() === '') return false
+        const edad = calcularEdadExacta(d.fecha_nacimiento)
+        if (edad && edad.years >= 29) return false
+        return true
     });
 
-    // Crear las 4 hojas originales con colores corporativos
-    addSheet('PROVEEDOR TICKETS (LIMPIO)', dataProveedor, 'FFD97706', { includeEstado: false, cleanFormat: true, monthlySummary: true }); // Naranja
-    addSheet('PROVEEDOR TICKETS (NOVEDADES)', dataProveedor, 'FFF59E0B', { includeEstado: false, cleanFormat: false, monthlySummary: true }); // Amarillo Naranja
-    addSheet('GENERAL - TODOS', data, 'FF2B6CB0'); // Azul
-    addSheet('ENTREGARON PAPELES', data.filter(d => d.estado_entrega === 'SÍ ENTREGÓ'), 'FF2F855A'); // Verde
-    addSheet('NO ENTREGARON PAPELES', data.filter(d => d.estado_entrega === 'NO ENTREGÓ'), 'FFC53030'); // Rojo
+    // 1) COMPLETO: todo el detalle interno
+    addSheet('COMPLETO', dataConTarifas, 'FF2B6CB0', { includeEstado: true, cleanFormat: false, columnSet: 'full' });
 
-    // Nuevas hojas de Auditoría de Novedades
-    const reemplazos = data.filter(d => d.is_replacement);
-    const diasAgregados = data.filter(d => d.days_added_later);
-    const nuevos = data.filter(d => d.is_new);
-    const conObservacion = data.filter(d => d.novedad_observacion && d.novedad_observacion.trim() !== '');
-    const resumenNovedades = data.filter(d => 
+    // 2) PROVEEDOR: solo columnas que se entregan al proveedor de tickets
+    addSheet('PROVEEDOR TICKETS', dataProveedor, 'FFD97706', {
+        includeEstado: false,
+        cleanFormat: true,
+        monthlySummary: true,
+        columnSet: 'proveedor',
+    });
+
+    // Hojas auxiliares (auditoría / filtros)
+    addSheet('ENTREGARON PAPELES', dataConTarifas.filter(d => d.estado_entrega === 'SÍ ENTREGÓ'), 'FF2F855A');
+    addSheet('NO ENTREGARON PAPELES', dataConTarifas.filter(d => d.estado_entrega === 'NO ENTREGÓ'), 'FFC53030');
+
+    const reemplazos = dataConTarifas.filter(d => d.is_replacement);
+    const diasAgregados = dataConTarifas.filter(d => d.days_added_later);
+    const nuevos = dataConTarifas.filter(d => d.is_new);
+    const conObservacion = dataConTarifas.filter(d => d.novedad_observacion && d.novedad_observacion.trim() !== '');
+    const resumenNovedades = dataConTarifas.filter(d => 
         d.is_replacement || 
         d.days_added_later || 
         d.is_new || 
         (d.novedad_observacion && d.novedad_observacion.trim() !== '')
     );
 
-    if (reemplazos.length > 0) addSheet('REEMPLAZOS', reemplazos, 'FFFBC02D'); // Amarillo oscuro
-    if (diasAgregados.length > 0) addSheet('DÍAS ADICIONADOS', diasAgregados, 'FF0288D1'); // Azul
-    if (nuevos.length > 0) addSheet('REGISTROS NUEVOS', nuevos, 'FF388E3C'); // Verde oscuro
-    if (conObservacion.length > 0) addSheet('OBSERVACIONES MANUALES', conObservacion, 'FFFFA726'); // Naranja
-    if (resumenNovedades.length > 0) addSheet('RESUMEN NOVEDADES', resumenNovedades, 'FFE65100'); // Naranja oscuro
-
-    // Logo en el encabezado (opcional): colocar un archivo en /public con nombre logo.png / logo-alcaldia.png / etc.
-    const logo = await tryLoadLogoForExcel()
-    if (logo) {
-        const imageId = workbook.addImage({ buffer: logo.buffer, extension: logo.extension })
-        workbook.worksheets.forEach(ws => {
-            try {
-                ws.addImage(imageId, {
-                    tl: { col: Math.max(0, ws.columnCount - 2.2), row: 0.2 },
-                    ext: { width: 140, height: 60 }
-                })
-            } catch {
-                // ignore
-            }
-        })
-    }
+    if (reemplazos.length > 0) addSheet('REEMPLAZOS', reemplazos, 'FFFBC02D');
+    if (diasAgregados.length > 0) addSheet('DÍAS ADICIONADOS', diasAgregados, 'FF0288D1');
+    if (nuevos.length > 0) addSheet('REGISTROS NUEVOS', nuevos, 'FF388E3C');
+    if (conObservacion.length > 0) addSheet('OBSERVACIONES MANUALES', conObservacion, 'FFFFA726');
+    if (resumenNovedades.length > 0) addSheet('RESUMEN NOVEDADES', resumenNovedades, 'FFE65100');
 
     // Generar archivo
     const buffer = await workbook.xlsx.writeBuffer();
